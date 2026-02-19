@@ -79,6 +79,7 @@ export type Rule = {
   uuid: string
   // sing-box-reFind
   disabled?: boolean
+  comment?: string
   // mihomo
   index: number
   extra?: {

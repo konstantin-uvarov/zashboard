@@ -189,6 +189,17 @@
       >
         {{ $t('flushSmartWeights') }}
       </button>
+      <button
+        v-if="isSingBox"
+        class="btn btn-sm"
+        @click="handleRestartBackend"
+      >
+        <span
+          v-if="isBackendRestarting"
+          class="loading loading-spinner loading-md"
+        ></span>
+        {{ $t('restartBackend') }}
+      </button>
     </div>
     <div
       v-if="!hiddenSettingsItems[`${SETTINGS_MENU_KEY.backend}.dnsQuery`]"
@@ -207,6 +218,7 @@ import {
   isCoreUpdateAvailable,
   isSingBox,
   reloadConfigsAPI,
+  restartBackendCgiAPI,
   restartCoreAPI,
   updateGeoDataAPI,
 } from '@/api'
@@ -369,5 +381,28 @@ const handleFlushFakeIP = async () => {
     content: 'flushFakeIPSuccess',
     type: 'alert-success',
   })
+}
+
+const isBackendRestarting = ref(false)
+const handleRestartBackend = async () => {
+  if (isBackendRestarting.value) return
+  isBackendRestarting.value = true
+  try {
+    await restartBackendCgiAPI()
+    setTimeout(() => {
+      reloadAll()
+    }, 3000)
+    isBackendRestarting.value = false
+    showNotification({
+      content: 'restartBackendSuccess',
+      type: 'alert-success',
+    })
+  } catch {
+    isBackendRestarting.value = false
+    showNotification({
+      content: 'restartBackendFailed',
+      type: 'alert-error',
+    })
+  }
 }
 </script>

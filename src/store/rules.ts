@@ -1,4 +1,4 @@
-import { fetchRuleProvidersAPI, fetchRulesAPI } from '@/api'
+import { fetchRuleProvidersAPI, fetchRulesAPI, fetchRulesCgiAPI, isSingBox } from '@/api'
 import { RULE_TAB_TYPE } from '@/constant'
 import type { Rule, RuleProvider } from '@/types'
 import { computed, ref } from 'vue'
@@ -18,9 +18,12 @@ export const renderRules = computed(() => {
 
   return rules.value.filter((rule) => {
     return rulesFilterValue.every((f) =>
-      [rule.type.toLowerCase(), rule.payload.toLowerCase(), rule.proxy.toLowerCase()].some((i) =>
-        i.includes(f),
-      ),
+      [
+        rule.type.toLowerCase(),
+        rule.payload.toLowerCase(),
+        rule.proxy.toLowerCase(),
+        (rule.comment || '').toLowerCase(),
+      ].some((i) => i.includes(f)),
     )
   })
 })
@@ -44,10 +47,25 @@ export const renderRulesProvider = computed(() => {
 })
 
 export const fetchRules = async () => {
-  const { data: ruleData } = await fetchRulesAPI()
+  let ruleList: Rule[]
+
+  if (isSingBox.value) {
+    try {
+      const cgiData = await fetchRulesCgiAPI()
+      ruleList = cgiData.rules
+    } catch {
+      // Fallback to Clash API if CGI is unavailable
+      const { data: ruleData } = await fetchRulesAPI()
+      ruleList = ruleData.rules
+    }
+  } else {
+    const { data: ruleData } = await fetchRulesAPI()
+    ruleList = ruleData.rules
+  }
+
   const { data: providerData } = await fetchRuleProvidersAPI()
 
-  rules.value = ruleData.rules.map((rule) => {
+  rules.value = ruleList.map((rule) => {
     const proxy = rule.proxy
     const proxyName = proxy.startsWith('route(') ? proxy.substring(6, proxy.length - 1) : proxy
 

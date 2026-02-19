@@ -164,6 +164,33 @@ export const toggleRuleDisabledSingBoxAPI = (uuid: string) => {
   return axios.put(`/rules/${encodeURIComponent(uuid)}`)
 }
 
+// CGI bridge for sing-box route rule management
+const getCgiBaseUrl = () => {
+  const backend = activeBackend.value
+  if (!backend) return ''
+  return `${backend.protocol}://${backend.host}/cgi-bin/sing-box-rules-api.sh`
+}
+
+export const fetchRulesCgiAPI = async (): Promise<{ rules: Rule[] }> => {
+  const response = await fetch(getCgiBaseUrl())
+  if (!response.ok) throw new Error(`CGI error: ${response.status}`)
+  return response.json()
+}
+
+export const toggleRuleCgiAPI = async (uuid: string) => {
+  const response = await fetch(`${getCgiBaseUrl()}/${encodeURIComponent(uuid)}`, {
+    method: 'PUT',
+  })
+  if (!response.ok) throw new Error(`CGI toggle error: ${response.status}`)
+}
+
+export const restartBackendCgiAPI = async () => {
+  const response = await fetch(`${getCgiBaseUrl()}/restart`, {
+    method: 'POST',
+  })
+  if (!response.ok) throw new Error(`CGI restart error: ${response.status}`)
+}
+
 export const fetchRuleProvidersAPI = () => {
   return axios.get<{ providers: Record<string, RuleProvider> }>('/providers/rules')
 }
@@ -341,7 +368,7 @@ async function fetchWithLocalCache<T>(url: string, version: string): Promise<T> 
 
 export const fetchIsUIUpdateAvailable = async () => {
   const { tag_name } = await fetchWithLocalCache<{ tag_name: string }>(
-    'https://api.github.com/repos/Zephyruso/zashboard/releases/latest',
+    'https://api.github.com/repos/konstantin-uvarov/zashboard/releases/latest',
     zashboardVersion.value,
   )
 
