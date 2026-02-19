@@ -226,6 +226,8 @@ const toggleRuleDisabledHandler = async () => {
     if (props.rule.uuid) {
       if (isSingBox.value) {
         await toggleRuleCgiAPI(props.rule.uuid)
+        // Wait for sing-box to restart after config change
+        await new Promise((resolve) => setTimeout(resolve, 3000))
       } else {
         await toggleRuleDisabledSingBoxAPI(props.rule.uuid)
       }

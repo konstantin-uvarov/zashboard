@@ -63,8 +63,6 @@ export const fetchRules = async () => {
     ruleList = ruleData.rules
   }
 
-  const { data: providerData } = await fetchRuleProvidersAPI()
-
   rules.value = ruleList.map((rule) => {
     const proxy = rule.proxy
     const proxyName = proxy.startsWith('route(') ? proxy.substring(6, proxy.length - 1) : proxy
@@ -74,5 +72,12 @@ export const fetchRules = async () => {
       proxy: proxyName,
     }
   })
-  ruleProviderList.value = Object.values(providerData.providers)
+
+  // Fetch providers separately — don't let its failure break rule display
+  try {
+    const { data: providerData } = await fetchRuleProvidersAPI()
+    ruleProviderList.value = Object.values(providerData.providers)
+  } catch {
+    // Keep existing provider data on failure (e.g. during sing-box restart)
+  }
 }
