@@ -1,25 +1,25 @@
 <template>
   <div class="card">
     <div class="card-title absolute z-10 flex w-full items-center justify-between px-4 pt-4">
-      {{ $t('connectionTopology') }}
-      <div class="flex items-center gap-2 font-normal">
+      <div class="flex items-center gap-2">
+        {{ $t('connectionTopology') }}
         <QuestionMarkCircleIcon
-          class="h-4 w-4 cursor-pointer"
+          class="h-4 w-4 cursor-pointer font-normal"
           @mouseenter="showTip($event, chartTip)"
         />
-        <select
-          v-model="timeRange"
-          class="select select-sm"
-        >
-          <option
-            v-for="opt in TIME_RANGE_OPTIONS"
-            :key="opt.value"
-            :value="opt.value"
-          >
-            {{ opt.value === 'all' ? $t('allData') : opt.labelKey }}
-          </option>
-        </select>
       </div>
+      <select
+        v-model="timeRange"
+        class="select select-sm font-normal"
+      >
+        <option
+          v-for="opt in TIME_RANGE_OPTIONS"
+          :key="opt.value"
+          :value="opt.value"
+        >
+          {{ opt.value === 'all' ? $t('allData') : opt.labelKey }}
+        </option>
+      </select>
     </div>
     <div
       :class="twMerge('relative h-96 w-full overflow-hidden pt-12')"
