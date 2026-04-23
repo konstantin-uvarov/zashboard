@@ -315,7 +315,8 @@ const en = {
   dataSince: 'Data since: {time}',
   trafficDistributionTip: 'Traffic distribution by the selected key.\n{note}',
   connectionTopologyTip: 'Connection routing through rules and proxies.\n{note}',
-  chartTipAllHistory: 'Persistent all-time data (stored across sessions).',
+  chartTipAllHistory:
+    'Persistent all-time data (stored across sessions).\nData collected since: {time}',
   chartTipTimeLimited:
     'In-memory data only — last 500 closed connections + active.\nOldest entry: {time}',
 }

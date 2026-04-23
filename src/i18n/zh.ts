@@ -312,7 +312,7 @@ const zh: LANG_MESSAGE = {
   dataSince: '数据起始: {time}',
   trafficDistributionTip: '按所选键分组的流量分布。\n{note}',
   connectionTopologyTip: '通过规则和代理的连接路由。\n{note}',
-  chartTipAllHistory: '持久全时段数据（跨会话存储）。',
+  chartTipAllHistory: '持久全时段数据（跨会话存储）。\n数据收集自: {time}',
   chartTipTimeLimited: '仅内存数据——最近500条已关闭连接+活跃连接。\n最早条目: {time}',
 }
 

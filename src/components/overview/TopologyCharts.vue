@@ -131,10 +131,15 @@ import { twMerge } from 'tailwind-merge'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
+import dayjs from 'dayjs'
+import relativeTime from 'dayjs/plugin/relativeTime'
+dayjs.extend(relativeTime)
+
 echarts.use([SankeyChart, GridComponent, LegendComponent, TooltipComponent, CanvasRenderer])
 
 const { t } = useI18n()
 const { showTip } = useTooltip()
+const startTime = useLocalStorage<number>('cache/connection-history-stats-start-time', Date.now())
 const isFullScreen = ref(false)
 const isPaused = ref(false)
 const colorRef = ref()
@@ -308,7 +313,12 @@ const sankeyData = computed(() => {
 
 const chartTip = computed(() => {
   if (timeRange.value === 'all') {
-    return t('connectionTopologyTip', { note: t('chartTipAllHistory') })
+    const d = dayjs(startTime.value)
+    return t('connectionTopologyTip', {
+      note: t('chartTipAllHistory', {
+        time: `${d.format('YYYY-MM-DD HH:mm')} (${d.fromNow()})`,
+      }),
+    })
   }
   const connections = filterConnectionsByTimeRange(
     [...closedConnections.value, ...activeConnections.value],

@@ -82,8 +82,13 @@ import { useI18n } from 'vue-i18n'
 
 echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer])
 
+import dayjs from 'dayjs'
+import relativeTime from 'dayjs/plugin/relativeTime'
+dayjs.extend(relativeTime)
+
 const { t } = useI18n()
 const { showTip } = useTooltip()
+const startTime = useLocalStorage<number>('cache/connection-history-stats-start-time', Date.now())
 const BAR_HEIGHT = 28
 const CHART_MARGIN = 50
 
@@ -144,7 +149,12 @@ const chartHeight = computed(() =>
 
 const chartTip = computed(() => {
   if (timeRange.value === 'all') {
-    return t('trafficDistributionTip', { note: t('chartTipAllHistory') })
+    const d = dayjs(startTime.value)
+    return t('trafficDistributionTip', {
+      note: t('chartTipAllHistory', {
+        time: `${d.format('YYYY-MM-DD HH:mm')} (${d.fromNow()})`,
+      }),
+    })
   }
   const rangeMs = getTimeRangeMs(timeRange.value)
   const filtered = filterConnectionsByTimeRange(
