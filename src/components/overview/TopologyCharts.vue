@@ -509,9 +509,7 @@ const options = computed(() => ({
 const updateNodeValueGraphics = (chartInstance: echarts.ECharts) => {
   const nodes = sankeyData.value.nodes
   if (nodes.length === 0) {
-    chartInstance.setOption({ graphic: [] }, { replaceMerge: ['graphic'] } as Parameters<
-      typeof chartInstance.setOption
-    >[1])
+    chartInstance.setOption({ graphic: [] })
     return
   }
   try {
@@ -527,6 +525,7 @@ const updateNodeValueGraphics = (chartInstance: echarts.ECharts) => {
       const { x, y, width, height } = layout
       if (height < 14) return
       elements.push({
+        id: `node-val-${idx}`,
         type: 'text',
         x: x + width / 2,
         y: y + height / 2,
@@ -543,9 +542,7 @@ const updateNodeValueGraphics = (chartInstance: echarts.ECharts) => {
         z: 200,
       })
     })
-    chartInstance.setOption({ graphic: elements }, { replaceMerge: ['graphic'] } as Parameters<
-      typeof chartInstance.setOption
-    >[1])
+    chartInstance.setOption({ graphic: elements })
   } catch {
     // internal API unavailable
   }
