@@ -8,7 +8,7 @@
           @mouseenter="showTip($event, chartTip)"
         />
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 font-normal">
         <select
           v-model="timeRange"
           class="select select-sm"
