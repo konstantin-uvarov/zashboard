@@ -1,5 +1,5 @@
 <template>
-  <div class="card w-full backdrop-blur-none!">
+  <div class="card w-full pb-4 backdrop-blur-none!">
     <div class="card-title need-blur flex items-center justify-between px-4 pt-4">
       <div class="flex w-full items-center gap-4 max-sm:flex-col max-sm:items-start">
         <div class="flex flex-1 items-center gap-2">

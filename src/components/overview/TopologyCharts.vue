@@ -1,5 +1,5 @@
 <template>
-  <div class="card">
+  <div class="card pb-4">
     <div class="card-title absolute z-10 flex w-full items-center justify-between px-4 pt-4">
       <div class="flex items-center gap-2">
         {{ $t('connectionTopology') }}
