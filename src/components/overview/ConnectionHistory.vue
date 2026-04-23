@@ -104,64 +104,56 @@
       </div>
     </div>
     <div
-      ref="parentRef"
-      class="h-96 overflow-auto"
       @touchstart.passive.stop
       @touchmove.passive.stop
       @touchend.passive.stop
     >
-      <div :style="{ height: `${totalSize}px` }">
-        <table class="table-sm table-zebra table w-full rounded-none">
-          <thead class="bg-base-200 sticky top-0 z-10">
-            <tr>
-              <th
-                v-for="header in tanstackTable.getHeaderGroups()[0]?.headers"
-                :key="header.id"
-                class="cursor-pointer select-none"
-                @click="header.column.getToggleSortingHandler()?.($event)"
-              >
-                <div class="flex items-center gap-1">
-                  <FlexRender
-                    v-if="!header.isPlaceholder"
-                    :render="header.column.columnDef.header"
-                    :props="header.getContext()"
-                  />
-                  <ArrowUpCircleIcon
-                    v-if="header.column.getIsSorted() === 'asc'"
-                    class="h-4 w-4"
-                  />
-                  <ArrowDownCircleIcon
-                    v-if="header.column.getIsSorted() === 'desc'"
-                    class="h-4 w-4"
-                  />
-                </div>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="(virtualRow, index) in virtualRows"
-              :key="virtualRow.key.toString()"
-              :style="{
-                height: `${virtualRow.size}px`,
-                transform: `translateY(${virtualRow.start - index * virtualRow.size}px)`,
-              }"
-              class="hover:bg-primary! hover:text-primary-content whitespace-nowrap"
+      <table class="table-sm table-zebra table w-full rounded-none">
+        <thead class="bg-base-200 sticky top-0 z-10">
+          <tr>
+            <th
+              v-for="header in tanstackTable.getHeaderGroups()[0]?.headers"
+              :key="header.id"
+              class="cursor-pointer select-none"
+              @click="header.column.getToggleSortingHandler()?.($event)"
             >
-              <td
-                v-for="cell in rows[virtualRow.index].getVisibleCells()"
-                :key="cell.id"
-                class="text-sm"
-              >
+              <div class="flex items-center gap-1">
                 <FlexRender
-                  :render="cell.column.columnDef.cell"
-                  :props="cell.getContext()"
+                  v-if="!header.isPlaceholder"
+                  :render="header.column.columnDef.header"
+                  :props="header.getContext()"
                 />
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+                <ArrowUpCircleIcon
+                  v-if="header.column.getIsSorted() === 'asc'"
+                  class="h-4 w-4"
+                />
+                <ArrowDownCircleIcon
+                  v-if="header.column.getIsSorted() === 'desc'"
+                  class="h-4 w-4"
+                />
+              </div>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="row in rows"
+            :key="row.id"
+            class="hover:bg-primary! hover:text-primary-content whitespace-nowrap"
+          >
+            <td
+              v-for="cell in row.getVisibleCells()"
+              :key="cell.id"
+              class="text-sm"
+            >
+              <FlexRender
+                :render="cell.column.columnDef.cell"
+                :props="cell.getContext()"
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
     <DialogWrapper
       v-model="showClearDialog"
@@ -225,7 +217,7 @@ import {
   type ColumnDef,
   type SortingState,
 } from '@tanstack/vue-table'
-import { useVirtualizer } from '@tanstack/vue-virtual'
+
 import { useStorage } from '@vueuse/core'
 import dayjs from 'dayjs'
 import { computed, h, onMounted, ref } from 'vue'
@@ -391,20 +383,6 @@ const tanstackTable = useVueTable({
 const rows = computed(() => {
   return tanstackTable.getRowModel().rows
 })
-
-const parentRef = ref<HTMLElement | null>(null)
-const rowVirtualizerOptions = computed(() => {
-  return {
-    count: rows.value.length,
-    getScrollElement: () => parentRef.value,
-    estimateSize: () => 36,
-    overscan: 10,
-  }
-})
-
-const rowVirtualizer = useVirtualizer(rowVirtualizerOptions)
-const virtualRows = computed(() => rowVirtualizer.value.getVirtualItems())
-const totalSize = computed(() => rowVirtualizer.value.getTotalSize() + 24)
 
 const showClearDialog = ref(false)
 const autoCleanupInterval = useStorage<AutoCleanupInterval>(
