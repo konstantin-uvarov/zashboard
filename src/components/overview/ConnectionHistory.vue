@@ -19,6 +19,21 @@
 
         <div class="flex items-center gap-2 font-normal max-sm:flex-col max-sm:items-start">
           <div class="flex items-center gap-2">
+            <span class="text-sm">{{ $t('timeRange') }}</span>
+            <select
+              v-model="timeRange"
+              class="select select-bordered select-sm"
+            >
+              <option
+                v-for="opt in TIME_RANGE_OPTIONS"
+                :key="opt.value"
+                :value="opt.value"
+              >
+                {{ opt.value === 'all' ? $t('allData') : opt.labelKey }}
+              </option>
+            </select>
+          </div>
+          <div class="flex items-center gap-2">
             <span class="text-sm">{{ $t('aggregateBy') }}</span>
             <select
               v-model="aggregationType"
@@ -88,6 +103,12 @@
         </div>
       </div>
     </div>
+    <p
+      v-if="oldestEntryLabel"
+      class="text-base-content/50 px-4 pb-2 text-xs"
+    >
+      {{ oldestEntryLabel }}
+    </p>
     <div
       ref="parentRef"
       class="h-96 overflow-auto"
@@ -177,6 +198,13 @@
 
 <script setup lang="ts">
 import { getIPColor } from '@/composables/ipColorMap'
+import {
+  TIME_RANGE_OPTIONS,
+  filterConnectionsByTimeRange,
+  getOldestConnectionTime,
+  getTimeRangeMs,
+  type TimeRangeValue,
+} from '@/composables/timeRange'
 import { ConnectionHistoryType, clearConnectionHistoryFromIndexedDB } from '@/helper/indexeddb'
 import { showNotification } from '@/helper/notification'
 import { getIPLabelFromMap } from '@/helper/sourceip'
@@ -188,7 +216,7 @@ import {
   initAggregatedDataMap,
   mergeAggregatedData,
 } from '@/store/connHistory'
-import { activeConnections } from '@/store/connections'
+import { activeConnections, closedConnections } from '@/store/connections'
 import {
   ArrowDownCircleIcon,
   ArrowUpCircleIcon,
@@ -232,11 +260,32 @@ const aggregationType = useStorage<ConnectionHistoryType>(
   'cache/connection-history-aggregation-type',
   ConnectionHistoryType.SourceIP,
 )
-const historicalData = computed(() => aggregatedDataMap.value[aggregationType.value])
-const aggregatedData = computed<ConnectionHistoryData[]>(() => {
-  const currentData = aggregateConnections(activeConnections.value, aggregationType.value)
+const timeRange = useStorage<TimeRangeValue>('stats-history-timerange', 'all')
 
-  return mergeAggregatedData(historicalData.value, currentData)
+const aggregatedData = computed<ConnectionHistoryData[]>(() => {
+  if (timeRange.value === 'all') {
+    const historicalData = aggregatedDataMap.value[aggregationType.value]
+    const currentData = aggregateConnections(activeConnections.value, aggregationType.value)
+    return mergeAggregatedData(historicalData, currentData)
+  }
+  const rangeMs = getTimeRangeMs(timeRange.value)
+  const filtered = filterConnectionsByTimeRange(
+    [...closedConnections.value, ...activeConnections.value],
+    rangeMs,
+  )
+  return aggregateConnections(filtered, aggregationType.value)
+})
+
+const oldestEntryLabel = computed(() => {
+  if (timeRange.value === 'all') return null
+  const rangeMs = getTimeRangeMs(timeRange.value)
+  const filtered = filterConnectionsByTimeRange(
+    [...closedConnections.value, ...activeConnections.value],
+    rangeMs,
+  )
+  const ts = getOldestConnectionTime(filtered)
+  if (ts === null) return null
+  return t('dataSince', { time: new Date(ts).toLocaleString() })
 })
 
 const totalStats = computed(() => {

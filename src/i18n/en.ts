@@ -310,6 +310,9 @@ const en = {
   deviceSpeedChart: 'Device Speed (Real-time)',
   trafficPieChart: 'Traffic Distribution',
   trafficByDownload: 'By downloaded MB',
+  timeRange: 'Time range',
+  allData: 'All data',
+  dataSince: 'Data since: {time}',
 }
 
 export type LANG_MESSAGE = typeof en

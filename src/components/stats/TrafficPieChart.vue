@@ -1,20 +1,40 @@
 <template>
   <div class="card">
-    <div class="card-title flex items-center justify-between px-4 pt-4">
+    <div class="card-title flex flex-wrap items-center justify-between gap-2 px-4 pt-4">
       <span>{{ $t('trafficPieChart') }}</span>
-      <select
-        v-model="groupBy"
-        class="select select-sm"
-      >
-        <option :value="ConnectionHistoryType.SourceIP">{{ $t('aggregateBySourceIP') }}</option>
-        <option :value="ConnectionHistoryType.Outbound">{{ $t('aggregateByOutbound') }}</option>
-        <option :value="ConnectionHistoryType.Destination">
-          {{ $t('aggregateByDestination') }}
-        </option>
-        <option :value="ConnectionHistoryType.Process">{{ $t('aggregateByProcess') }}</option>
-      </select>
+      <div class="flex items-center gap-2">
+        <select
+          v-model="timeRange"
+          class="select select-sm"
+        >
+          <option
+            v-for="opt in TIME_RANGE_OPTIONS"
+            :key="opt.value"
+            :value="opt.value"
+          >
+            {{ opt.value === 'all' ? $t('allData') : opt.labelKey }}
+          </option>
+        </select>
+        <select
+          v-model="groupBy"
+          class="select select-sm"
+        >
+          <option :value="ConnectionHistoryType.SourceIP">{{ $t('aggregateBySourceIP') }}</option>
+          <option :value="ConnectionHistoryType.Outbound">{{ $t('aggregateByOutbound') }}</option>
+          <option :value="ConnectionHistoryType.Destination">
+            {{ $t('aggregateByDestination') }}
+          </option>
+          <option :value="ConnectionHistoryType.Process">{{ $t('aggregateByProcess') }}</option>
+        </select>
+      </div>
     </div>
     <div class="card-body relative p-2!">
+      <p
+        v-if="oldestEntryLabel"
+        class="text-base-content/50 px-1 pb-1 text-xs"
+      >
+        {{ oldestEntryLabel }}
+      </p>
       <div
         ref="chartEl"
         :style="{ height: chartHeight + 'px' }"
@@ -36,10 +56,18 @@
 
 <script setup lang="ts">
 import { getIPColor } from '@/composables/ipColorMap'
+import {
+  TIME_RANGE_OPTIONS,
+  filterConnectionsByTimeRange,
+  getOldestConnectionTime,
+  getTimeRangeMs,
+  type TimeRangeValue,
+} from '@/composables/timeRange'
 import { ConnectionHistoryType } from '@/helper/indexeddb'
 import { getIPLabelFromMap } from '@/helper/sourceip'
 import { prettyBytesHelper } from '@/helper/utils'
-import { aggregatedDataMap } from '@/store/connHistory'
+import { aggregateConnections, aggregatedDataMap, mergeAggregatedData } from '@/store/connHistory'
+import { activeConnections, closedConnections } from '@/store/connections'
 import { font, theme } from '@/store/settings'
 import { useElementSize, useLocalStorage } from '@vueuse/core'
 import { BarChart } from 'echarts/charts'
@@ -48,9 +76,11 @@ import * as echarts from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { debounce } from 'lodash'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer])
 
+const { t } = useI18n()
 const BAR_HEIGHT = 28
 const CHART_MARGIN = 50
 
@@ -60,6 +90,7 @@ const groupBy = useLocalStorage<ConnectionHistoryType>(
   'stats-pie-groupby',
   ConnectionHistoryType.SourceIP,
 )
+const timeRange = useLocalStorage<TimeRangeValue>('stats-pie-timerange', 'all')
 
 const colorSet = {
   baseContent: '',
@@ -80,7 +111,18 @@ const updateFontFamily = () => {
 }
 
 const chartData = computed(() => {
-  const entries = aggregatedDataMap.value[groupBy.value] ?? []
+  let entries
+  if (timeRange.value === 'all') {
+    entries = aggregatedDataMap.value[groupBy.value] ?? []
+  } else {
+    const rangeMs = getTimeRangeMs(timeRange.value)
+    const filtered = filterConnectionsByTimeRange(
+      [...closedConnections.value, ...activeConnections.value],
+      rangeMs,
+    )
+    const live = aggregateConnections(filtered, groupBy.value)
+    entries = mergeAggregatedData([], live)
+  }
   return [...entries]
     .sort((a, b) => b.download - a.download)
     .map((entry) => {
@@ -96,6 +138,18 @@ const chartData = computed(() => {
 const chartHeight = computed(() =>
   Math.max(120, chartData.value.length * BAR_HEIGHT + CHART_MARGIN),
 )
+
+const oldestEntryLabel = computed(() => {
+  if (timeRange.value === 'all') return null
+  const rangeMs = getTimeRangeMs(timeRange.value)
+  const filtered = filterConnectionsByTimeRange(
+    [...closedConnections.value, ...activeConnections.value],
+    rangeMs,
+  )
+  const ts = getOldestConnectionTime(filtered)
+  if (ts === null) return null
+  return t('dataSince', { time: new Date(ts).toLocaleString() })
+})
 
 const buildOptions = () => {
   const labels = chartData.value.map((d) => d.label)

@@ -307,6 +307,9 @@ const zh: LANG_MESSAGE = {
   deviceSpeedChart: '设备速度（实时）',
   trafficPieChart: '流量分布',
   trafficByDownload: '按下载量',
+  timeRange: '时间范围',
+  allData: '全部数据',
+  dataSince: '数据起始: {time}',
 }
 
 export default zh

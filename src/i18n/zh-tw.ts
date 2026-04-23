@@ -307,6 +307,9 @@ const zhTW: LANG_MESSAGE = {
   deviceSpeedChart: '設備速度（即時）',
   trafficPieChart: '流量分佈',
   trafficByDownload: '依下載量',
+  timeRange: '時間範圍',
+  allData: '全部數據',
+  dataSince: '數據起始: {time}',
 }
 
 export default zhTW

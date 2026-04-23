@@ -1,7 +1,19 @@
 <template>
   <div class="card">
-    <div class="card-title absolute px-4 pt-4">
+    <div class="card-title absolute flex items-center gap-2 px-4 pt-4">
       {{ $t('connectionTopology') }}
+      <select
+        v-model="timeRange"
+        class="select select-sm font-normal"
+      >
+        <option
+          v-for="opt in TIME_RANGE_OPTIONS"
+          :key="opt.value"
+          :value="opt.value"
+        >
+          {{ opt.value === 'all' ? $t('allData') : opt.labelKey }}
+        </option>
+      </select>
     </div>
     <div
       :class="twMerge('relative h-96 w-full overflow-hidden pt-12')"
@@ -24,6 +36,12 @@
           <div>{{ t('noData') }}</div>
         </div>
       </div>
+      <p
+        v-if="oldestEntryLabel"
+        class="text-base-content/50 absolute bottom-1 left-2 text-xs"
+      >
+        {{ oldestEntryLabel }}
+      </p>
       <div
         class="absolute right-1 bottom-1 flex flex-col gap-1"
         :class="isFullScreen ? 'fixed right-4 bottom-4 mb-[env(safe-area-inset-bottom)]' : ''"
@@ -83,10 +101,17 @@
 </template>
 
 <script setup lang="ts">
+import {
+  TIME_RANGE_OPTIONS,
+  filterConnectionsByTimeRange,
+  getOldestConnectionTime,
+  getTimeRangeMs,
+  type TimeRangeValue,
+} from '@/composables/timeRange'
 import { backgroundImage } from '@/helper/indexeddb'
 import { getIPLabelFromMap } from '@/helper/sourceip'
 import { isMiddleScreen } from '@/helper/utils'
-import { activeConnections } from '@/store/connections'
+import { activeConnections, closedConnections } from '@/store/connections'
 import { blurIntensity, dashboardTransparent, font, theme } from '@/store/settings'
 import {
   ArrowsPointingInIcon,
@@ -94,7 +119,7 @@ import {
   PauseCircleIcon,
   PlayCircleIcon,
 } from '@heroicons/vue/24/outline'
-import { useElementSize, useWindowSize } from '@vueuse/core'
+import { useElementSize, useLocalStorage, useWindowSize } from '@vueuse/core'
 import { SankeyChart } from 'echarts/charts'
 import { GridComponent, LegendComponent, TooltipComponent } from 'echarts/components'
 import * as echarts from 'echarts/core'
@@ -114,6 +139,7 @@ const chart = ref()
 const fullScreenChart = ref()
 const fullScreenMyChart = ref<echarts.ECharts>()
 const { width: windowWidth, height: windowHeight } = useWindowSize()
+const timeRange = useLocalStorage<TimeRangeValue>('stats-topology-timerange', 'all')
 
 const shouldRotate = computed(() => {
   return isFullScreen.value && isMiddleScreen.value && windowHeight.value > windowWidth.value
@@ -152,7 +178,16 @@ const updateFontFamily = () => {
 }
 
 const sankeyData = computed(() => {
-  const connections = activeConnections.value
+  let connections
+  if (timeRange.value === 'all') {
+    connections = activeConnections.value
+  } else {
+    const rangeMs = getTimeRangeMs(timeRange.value)
+    connections = filterConnectionsByTimeRange(
+      [...closedConnections.value, ...activeConnections.value],
+      rangeMs,
+    )
+  }
   if (!connections || connections.length === 0) {
     return { nodes: [], links: [] }
   }
@@ -266,6 +301,19 @@ const sankeyData = computed(() => {
   })
 
   return { nodes: sortedNodes, links }
+})
+
+const oldestEntryLabel = computed(() => {
+  const connections =
+    timeRange.value === 'all'
+      ? activeConnections.value
+      : filterConnectionsByTimeRange(
+          [...closedConnections.value, ...activeConnections.value],
+          getTimeRangeMs(timeRange.value),
+        )
+  const ts = getOldestConnectionTime(connections)
+  if (ts === null) return null
+  return t('dataSince', { time: new Date(ts).toLocaleString() })
 })
 
 const layerColors = ['#6a6fc5', '#a8d4a0', '#fddb8a', '#f2a0a0']

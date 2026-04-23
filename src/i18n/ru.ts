@@ -313,6 +313,9 @@ const ru: LANG_MESSAGE = {
   deviceSpeedChart: 'Скорость по устройствам (реальное время)',
   trafficPieChart: 'Распределение трафика',
   trafficByDownload: 'По загруженным МБ',
+  timeRange: 'Период',
+  allData: 'Все данные',
+  dataSince: 'Данные с: {time}',
 }
 
 export default ru
