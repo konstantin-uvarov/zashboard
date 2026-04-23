@@ -1,5 +1,6 @@
 <template>
   <div class="flex w-full flex-col gap-2 p-2">
+    <ChartsCard />
     <div class="card w-full">
       <div class="card-title px-4 pt-4">
         {{ $t('deviceSpeedChart') }}
@@ -9,9 +10,8 @@
       </div>
     </div>
     <TrafficPieChart />
-    <ChartsCard />
-    <TopologyCharts />
     <ConnectionHistory />
+    <TopologyCharts />
     <RuleHitCountCard />
   </div>
 </template>
