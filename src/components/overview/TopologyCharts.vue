@@ -2,6 +2,10 @@
   <div class="card">
     <div class="card-title absolute flex items-center gap-2 px-4 pt-4">
       {{ $t('connectionTopology') }}
+      <QuestionMarkCircleIcon
+        class="h-4 w-4 cursor-pointer font-normal"
+        @mouseenter="showTip($event, chartTip)"
+      />
       <select
         v-model="timeRange"
         class="select select-sm font-normal"
@@ -36,12 +40,6 @@
           <div>{{ t('noData') }}</div>
         </div>
       </div>
-      <p
-        v-if="oldestEntryLabel"
-        class="text-base-content/50 absolute bottom-1 left-2 text-xs"
-      >
-        {{ oldestEntryLabel }}
-      </p>
       <div
         class="absolute right-1 bottom-1 flex flex-col gap-1"
         :class="isFullScreen ? 'fixed right-4 bottom-4 mb-[env(safe-area-inset-bottom)]' : ''"
@@ -110,6 +108,7 @@ import {
 } from '@/composables/timeRange'
 import { backgroundImage } from '@/helper/indexeddb'
 import { getIPLabelFromMap } from '@/helper/sourceip'
+import { useTooltip } from '@/helper/tooltip'
 import { isMiddleScreen } from '@/helper/utils'
 import { activeConnections, closedConnections } from '@/store/connections'
 import { blurIntensity, dashboardTransparent, font, theme } from '@/store/settings'
@@ -118,6 +117,7 @@ import {
   ArrowsPointingOutIcon,
   PauseCircleIcon,
   PlayCircleIcon,
+  QuestionMarkCircleIcon,
 } from '@heroicons/vue/24/outline'
 import { useElementSize, useLocalStorage, useWindowSize } from '@vueuse/core'
 import { SankeyChart } from 'echarts/charts'
@@ -132,6 +132,7 @@ import { useI18n } from 'vue-i18n'
 echarts.use([SankeyChart, GridComponent, LegendComponent, TooltipComponent, CanvasRenderer])
 
 const { t } = useI18n()
+const { showTip } = useTooltip()
 const isFullScreen = ref(false)
 const isPaused = ref(false)
 const colorRef = ref()
@@ -303,17 +304,19 @@ const sankeyData = computed(() => {
   return { nodes: sortedNodes, links }
 })
 
-const oldestEntryLabel = computed(() => {
-  const connections =
-    timeRange.value === 'all'
-      ? activeConnections.value
-      : filterConnectionsByTimeRange(
-          [...closedConnections.value, ...activeConnections.value],
-          getTimeRangeMs(timeRange.value),
-        )
+const chartTip = computed(() => {
+  if (timeRange.value === 'all') {
+    return t('connectionTopologyTip', { note: t('chartTipAllHistory') })
+  }
+  const connections = filterConnectionsByTimeRange(
+    [...closedConnections.value, ...activeConnections.value],
+    getTimeRangeMs(timeRange.value),
+  )
   const ts = getOldestConnectionTime(connections)
-  if (ts === null) return null
-  return t('dataSince', { time: new Date(ts).toLocaleString() })
+  const note = t('chartTipTimeLimited', {
+    time: ts !== null ? new Date(ts).toLocaleString() : '—',
+  })
+  return t('connectionTopologyTip', { note })
 })
 
 const layerColors = ['#6a6fc5', '#a8d4a0', '#fddb8a', '#f2a0a0']

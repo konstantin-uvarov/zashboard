@@ -316,6 +316,11 @@ const ru: LANG_MESSAGE = {
   timeRange: 'Период',
   allData: 'Все данные',
   dataSince: 'Данные с: {time}',
+  trafficDistributionTip: 'Распределение трафика по выбранному ключу.\n{note}',
+  connectionTopologyTip: 'Маршрутизация соединений через правила и прокси.\n{note}',
+  chartTipAllHistory: 'Постоянные данные за всё время (сохраняются между сессиями).',
+  chartTipTimeLimited:
+    'Только данные в памяти — последние 500 закрытых соединений + активные.\nСтарейшая запись: {time}',
 }
 
 export default ru

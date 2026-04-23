@@ -313,6 +313,11 @@ const en = {
   timeRange: 'Time range',
   allData: 'All data',
   dataSince: 'Data since: {time}',
+  trafficDistributionTip: 'Traffic distribution by the selected key.\n{note}',
+  connectionTopologyTip: 'Connection routing through rules and proxies.\n{note}',
+  chartTipAllHistory: 'Persistent all-time data (stored across sessions).',
+  chartTipTimeLimited:
+    'In-memory data only — last 500 closed connections + active.\nOldest entry: {time}',
 }
 
 export type LANG_MESSAGE = typeof en

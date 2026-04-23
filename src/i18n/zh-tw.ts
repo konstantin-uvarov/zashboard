@@ -310,6 +310,10 @@ const zhTW: LANG_MESSAGE = {
   timeRange: '時間範圍',
   allData: '全部數據',
   dataSince: '數據起始: {time}',
+  trafficDistributionTip: '按所選鍵分組的流量分佈。\n{note}',
+  connectionTopologyTip: '通過規則和代理的連接路由。\n{note}',
+  chartTipAllHistory: '持久全時段數據（跨會話存儲）。',
+  chartTipTimeLimited: '僅內存數據——最近500條已關閉連接+活躍連接。\n最早條目: {time}',
 }
 
 export default zhTW

@@ -1,7 +1,13 @@
 <template>
   <div class="card">
     <div class="card-title flex flex-wrap items-center justify-between gap-2 px-4 pt-4">
-      <span>{{ $t('trafficPieChart') }}</span>
+      <div class="flex items-center gap-2">
+        <span>{{ $t('trafficPieChart') }}</span>
+        <QuestionMarkCircleIcon
+          class="h-4 w-4 cursor-pointer"
+          @mouseenter="showTip($event, chartTip)"
+        />
+      </div>
       <div class="flex items-center gap-2">
         <select
           v-model="timeRange"
@@ -29,12 +35,6 @@
       </div>
     </div>
     <div class="card-body relative p-2!">
-      <p
-        v-if="oldestEntryLabel"
-        class="text-base-content/50 px-1 pb-1 text-xs"
-      >
-        {{ oldestEntryLabel }}
-      </p>
       <div
         ref="chartEl"
         :style="{ height: chartHeight + 'px' }"
@@ -65,10 +65,12 @@ import {
 } from '@/composables/timeRange'
 import { ConnectionHistoryType } from '@/helper/indexeddb'
 import { getIPLabelFromMap } from '@/helper/sourceip'
+import { useTooltip } from '@/helper/tooltip'
 import { prettyBytesHelper } from '@/helper/utils'
 import { aggregateConnections, aggregatedDataMap, mergeAggregatedData } from '@/store/connHistory'
 import { activeConnections, closedConnections } from '@/store/connections'
 import { font, theme } from '@/store/settings'
+import { QuestionMarkCircleIcon } from '@heroicons/vue/24/outline'
 import { useElementSize, useLocalStorage } from '@vueuse/core'
 import { BarChart } from 'echarts/charts'
 import { GridComponent, TooltipComponent } from 'echarts/components'
@@ -81,6 +83,7 @@ import { useI18n } from 'vue-i18n'
 echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer])
 
 const { t } = useI18n()
+const { showTip } = useTooltip()
 const BAR_HEIGHT = 28
 const CHART_MARGIN = 50
 
@@ -139,16 +142,20 @@ const chartHeight = computed(() =>
   Math.max(120, chartData.value.length * BAR_HEIGHT + CHART_MARGIN),
 )
 
-const oldestEntryLabel = computed(() => {
-  if (timeRange.value === 'all') return null
+const chartTip = computed(() => {
+  if (timeRange.value === 'all') {
+    return t('trafficDistributionTip', { note: t('chartTipAllHistory') })
+  }
   const rangeMs = getTimeRangeMs(timeRange.value)
   const filtered = filterConnectionsByTimeRange(
     [...closedConnections.value, ...activeConnections.value],
     rangeMs,
   )
   const ts = getOldestConnectionTime(filtered)
-  if (ts === null) return null
-  return t('dataSince', { time: new Date(ts).toLocaleString() })
+  const note = t('chartTipTimeLimited', {
+    time: ts !== null ? new Date(ts).toLocaleString() : '—',
+  })
+  return t('trafficDistributionTip', { note })
 })
 
 const buildOptions = () => {

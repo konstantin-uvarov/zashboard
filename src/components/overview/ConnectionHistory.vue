@@ -103,12 +103,6 @@
         </div>
       </div>
     </div>
-    <p
-      v-if="oldestEntryLabel"
-      class="text-base-content/50 px-4 pb-2 text-xs"
-    >
-      {{ oldestEntryLabel }}
-    </p>
     <div
       ref="parentRef"
       class="h-96 overflow-auto"
@@ -276,18 +270,6 @@ const aggregatedData = computed<ConnectionHistoryData[]>(() => {
   return aggregateConnections(filtered, aggregationType.value)
 })
 
-const oldestEntryLabel = computed(() => {
-  if (timeRange.value === 'all') return null
-  const rangeMs = getTimeRangeMs(timeRange.value)
-  const filtered = filterConnectionsByTimeRange(
-    [...closedConnections.value, ...activeConnections.value],
-    rangeMs,
-  )
-  const ts = getOldestConnectionTime(filtered)
-  if (ts === null) return null
-  return t('dataSince', { time: new Date(ts).toLocaleString() })
-})
-
 const totalStats = computed(() => {
   return aggregatedData.value.reduce(
     (acc, item) => {
@@ -432,10 +414,20 @@ const autoCleanupInterval = useStorage<AutoCleanupInterval>(
 const startTime = useStorage<number>('cache/connection-history-stats-start-time', Date.now())
 const totalConnectionsTip = computed(() => {
   const dayjsTime = dayjs(startTime.value)
-
-  return t('totalConnectionsTip', {
+  const baseTip = t('totalConnectionsTip', {
     statsStartTime: `${dayjsTime.format('YYYY-MM-DD HH:mm')} (${dayjsTime.fromNow()})`,
   })
+  if (timeRange.value === 'all') return baseTip
+  const rangeMs = getTimeRangeMs(timeRange.value)
+  const filtered = filterConnectionsByTimeRange(
+    [...closedConnections.value, ...activeConnections.value],
+    rangeMs,
+  )
+  const ts = getOldestConnectionTime(filtered)
+  const note = t('chartTipTimeLimited', {
+    time: ts !== null ? new Date(ts).toLocaleString() : '—',
+  })
+  return `${baseTip}\n\n${note}`
 })
 const getCleanupIntervalMs = (interval: AutoCleanupInterval): number => {
   switch (interval) {
