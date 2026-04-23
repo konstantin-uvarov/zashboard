@@ -206,7 +206,7 @@ import {
   getProcessFromConnection,
 } from '@/helper'
 import { showNotification } from '@/helper/notification'
-import { getIPLabelFromMap } from '@/helper/sourceip'
+import { getIPDisplayLabel } from '@/helper/sourceip'
 import { fromNow, prettyBytesHelper } from '@/helper/utils'
 import { connectionTabShow, renderConnections } from '@/store/connections'
 import {
@@ -441,7 +441,7 @@ const columns: ColumnDef<Connection>[] = [
     header: () => t(CONNECTIONS_TABLE_ACCESSOR_KEY.SourceIP),
     id: CONNECTIONS_TABLE_ACCESSOR_KEY.SourceIP,
     accessorFn: (original) => {
-      return getIPLabelFromMap(original.metadata.sourceIP)
+      return getIPDisplayLabel(original.metadata.sourceIP)
     },
   },
   {

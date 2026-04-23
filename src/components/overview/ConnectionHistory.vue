@@ -193,7 +193,7 @@ import {
 } from '@/composables/timeRange'
 import { ConnectionHistoryType, clearConnectionHistoryFromIndexedDB } from '@/helper/indexeddb'
 import { showNotification } from '@/helper/notification'
-import { getIPLabelFromMap } from '@/helper/sourceip'
+import { getIPDisplayLabel } from '@/helper/sourceip'
 import { useTooltip } from '@/helper/tooltip'
 import { prettyBytesHelper } from '@/helper/utils'
 import {
@@ -301,7 +301,7 @@ const columns = computed<ColumnDef<ConnectionHistoryData>[]>(() => {
           h('span', {
             style: `display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0`,
           }),
-          getIPLabelFromMap(ip),
+          getIPDisplayLabel(ip),
         ])
       } else if (aggregationType.value === ConnectionHistoryType.Destination) {
         return row.original.key

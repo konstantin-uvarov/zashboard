@@ -114,7 +114,7 @@ const buildOptions = () => ({
     },
   },
   series: deviceCombinedSeries.value.map((s) => {
-    const c = getIPColor(s.name)
+    const c = getIPColor(s.ip)
     return {
       name: s.name,
       type: 'line',

@@ -109,7 +109,7 @@ import {
   type TimeRangeValue,
 } from '@/composables/timeRange'
 import { backgroundImage } from '@/helper/indexeddb'
-import { getIPLabelFromMap } from '@/helper/sourceip'
+import { getIPDisplayLabel } from '@/helper/sourceip'
 import { useTooltip } from '@/helper/tooltip'
 import { isMiddleScreen } from '@/helper/utils'
 import { activeConnections, closedConnections } from '@/store/connections'
@@ -216,7 +216,7 @@ const sankeyData = computed(() => {
   }
 
   connections.forEach((conn) => {
-    const sourceIP = getIPLabelFromMap(conn.metadata.sourceIP)
+    const sourceIP = getIPDisplayLabel(conn.metadata.sourceIP)
     const rulePayload = conn.rulePayload ? `${conn.rule}: ${conn.rulePayload}` : conn.rule
     const chains = conn.chains || []
 

@@ -64,7 +64,7 @@ import {
   type TimeRangeValue,
 } from '@/composables/timeRange'
 import { ConnectionHistoryType } from '@/helper/indexeddb'
-import { getIPLabelFromMap } from '@/helper/sourceip'
+import { getIPDisplayLabel } from '@/helper/sourceip'
 import { useTooltip } from '@/helper/tooltip'
 import { prettyBytesHelper } from '@/helper/utils'
 import { aggregateConnections, aggregatedDataMap, mergeAggregatedData } from '@/store/connHistory'
@@ -135,7 +135,7 @@ const chartData = computed(() => {
     .sort((a, b) => b.download - a.download)
     .map((entry) => {
       const label =
-        groupBy.value === ConnectionHistoryType.SourceIP ? getIPLabelFromMap(entry.key) : entry.key
+        groupBy.value === ConnectionHistoryType.SourceIP ? getIPDisplayLabel(entry.key) : entry.key
       const color =
         groupBy.value === ConnectionHistoryType.SourceIP ? getIPColor(entry.key) : undefined
       return { label, download: entry.download, upload: entry.upload, color }

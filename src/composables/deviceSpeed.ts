@@ -1,4 +1,4 @@
-import { getIPLabelFromMap } from '@/helper/sourceip'
+import { getIPDisplayLabel } from '@/helper/sourceip'
 import { activeConnections } from '@/store/connections'
 import { timeSaved } from '@/store/overview'
 import { computed, ref, watch } from 'vue'
@@ -85,7 +85,8 @@ const stableSortedIPs = computed(() => sortIPsNumerically([...stableDeviceIPs.va
 
 export const deviceCombinedSeries = computed(() =>
   stableSortedIPs.value.map((ip) => ({
-    name: getIPLabelFromMap(ip),
+    ip,
+    name: getIPDisplayLabel(ip),
     data: deviceSpeedHistory.value.get(ip) ?? initValue(),
   })),
 )
