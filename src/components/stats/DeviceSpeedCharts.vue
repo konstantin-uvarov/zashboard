@@ -9,7 +9,7 @@
       ref="colorRef"
     />
     <button
-      class="btn btn-ghost btn-xs absolute right-1 bottom-0"
+      class="btn btn-ghost btn-xs absolute top-0 right-1"
       @click="isPaused = !isPaused"
     >
       <component
