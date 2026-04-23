@@ -176,6 +176,7 @@
 </template>
 
 <script setup lang="ts">
+import { getIPColor } from '@/composables/ipColorMap'
 import { ConnectionHistoryType, clearConnectionHistoryFromIndexedDB } from '@/helper/indexeddb'
 import { showNotification } from '@/helper/notification'
 import { getIPLabelFromMap } from '@/helper/sourceip'
@@ -271,7 +272,14 @@ const columns = computed<ColumnDef<ConnectionHistoryData>[]>(() => {
     accessorFn: (row) => row.key,
     cell: ({ row }) => {
       if (aggregationType.value === ConnectionHistoryType.SourceIP) {
-        return getIPLabelFromMap(row.original.key)
+        const ip = row.original.key
+        const color = getIPColor(ip)
+        return h('span', { style: 'display:flex;align-items:center;gap:5px' }, [
+          h('span', {
+            style: `display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0`,
+          }),
+          getIPLabelFromMap(ip),
+        ])
       } else if (aggregationType.value === ConnectionHistoryType.Destination) {
         return row.original.key
       } else if (aggregationType.value === ConnectionHistoryType.Process) {

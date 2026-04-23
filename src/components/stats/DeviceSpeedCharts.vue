@@ -22,6 +22,7 @@
 
 <script setup lang="ts">
 import { deviceCombinedSeries } from '@/composables/deviceSpeed'
+import { getIPColor } from '@/composables/ipColorMap'
 import { prettyBytesHelper } from '@/helper/utils'
 import { font, theme } from '@/store/settings'
 import { PauseCircleIcon, PlayCircleIcon } from '@heroicons/vue/24/outline'
@@ -34,37 +35,6 @@ import { debounce } from 'lodash'
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 
 echarts.use([LineChart, GridComponent, LegendComponent, TooltipComponent, CanvasRenderer])
-
-const PALETTE = [
-  '#5470c6',
-  '#91cc75',
-  '#fac858',
-  '#ee6666',
-  '#73c0de',
-  '#3ba272',
-  '#fc8452',
-  '#9a60b4',
-  '#ea7ccc',
-  '#45b7d1',
-  '#96ceb4',
-  '#ffad60',
-  '#ff6b6b',
-  '#c3a6ff',
-  '#a8e063',
-  '#56ccf2',
-]
-
-// Stable name → color map: once assigned, color never changes for a device
-const nameColorMap = new Map<string, string>()
-let nextColorIdx = 0
-
-const getStableColor = (name: string) => {
-  if (!nameColorMap.has(name)) {
-    nameColorMap.set(name, PALETTE[nextColorIdx % PALETTE.length])
-    nextColorIdx++
-  }
-  return nameColorMap.get(name)!
-}
 
 const chartEl = ref<HTMLElement | null>(null)
 const colorRef = ref<HTMLElement | null>(null)
@@ -144,7 +114,7 @@ const buildOptions = () => ({
     },
   },
   series: deviceCombinedSeries.value.map((s) => {
-    const c = getStableColor(s.name)
+    const c = getIPColor(s.name)
     return {
       name: s.name,
       type: 'line',

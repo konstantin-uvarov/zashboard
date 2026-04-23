@@ -34,6 +34,7 @@
 </template>
 
 <script setup lang="ts">
+import { getIPColor } from '@/composables/ipColorMap'
 import { ConnectionHistoryType } from '@/helper/indexeddb'
 import { getIPLabelFromMap } from '@/helper/sourceip'
 import { prettyBytesHelper } from '@/helper/utils'
@@ -85,12 +86,14 @@ const pieData = computed(() => {
   const result = top.map((entry) => {
     const label =
       groupBy.value === ConnectionHistoryType.SourceIP ? getIPLabelFromMap(entry.key) : entry.key
-    return { name: label, value: entry.download }
+    const itemStyle =
+      groupBy.value === ConnectionHistoryType.SourceIP ? { color: getIPColor(entry.key) } : {}
+    return { name: label, value: entry.download, itemStyle }
   })
 
   if (rest.length > 0) {
     const otherTotal = rest.reduce((sum, e) => sum + e.download, 0)
-    result.push({ name: 'Other', value: otherTotal })
+    result.push({ name: 'Other', value: otherTotal, itemStyle: {} })
   }
 
   return result.filter((d) => d.value > 0)
