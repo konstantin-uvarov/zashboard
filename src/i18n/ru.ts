@@ -309,6 +309,10 @@ const ru: LANG_MESSAGE = {
   ruleLastHit: 'Последнее попадание: {time}',
   ruleMissCount: 'Промах: {count} раз',
   ruleLastMiss: 'Последний промах: {time}',
+  stats: 'Статистика',
+  deviceSpeedChart: 'Скорость по устройствам (реальное время)',
+  trafficPieChart: 'Распределение трафика',
+  trafficByDownload: 'По загруженным МБ',
 }
 
 export default ru

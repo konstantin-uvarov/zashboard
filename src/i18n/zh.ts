@@ -303,6 +303,10 @@ const zh: LANG_MESSAGE = {
   ruleLastHit: '最后命中: {time}',
   ruleMissCount: '未命中: {count} 次',
   ruleLastMiss: '最后未命中: {time}',
+  stats: '统计',
+  deviceSpeedChart: '设备速度（实时）',
+  trafficPieChart: '流量分布',
+  trafficByDownload: '按下载量',
 }
 
 export default zh

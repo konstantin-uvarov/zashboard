@@ -303,6 +303,10 @@ const zhTW: LANG_MESSAGE = {
   ruleLastHit: '最後命中: {time}',
   ruleMissCount: '未命中: {count} 次',
   ruleLastMiss: '最後未命中: {time}',
+  stats: '統計',
+  deviceSpeedChart: '設備速度（即時）',
+  trafficPieChart: '流量分佈',
+  trafficByDownload: '依下載量',
 }
 
 export default zhTW

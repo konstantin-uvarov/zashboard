@@ -306,6 +306,10 @@ const en = {
   ruleLastHit: 'Last hit: {time}',
   ruleMissCount: 'Miss: {count} times',
   ruleLastMiss: 'Last miss: {time}',
+  stats: 'Stats',
+  deviceSpeedChart: 'Device Speed (Real-time)',
+  trafficPieChart: 'Traffic Distribution',
+  trafficByDownload: 'By downloaded MB',
 }
 
 export type LANG_MESSAGE = typeof en
