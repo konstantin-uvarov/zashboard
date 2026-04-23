@@ -313,12 +313,28 @@ const sankeyData = computed(() => {
     return { nodes: [], links: [] }
   }
 
+  // Compute per-node raw value totals from linkMap (outgoing or incoming for leaf nodes)
+  const nodeOutgoing = new Map<number, number>()
+  const nodeIncoming = new Map<number, number>()
+  linkMap.forEach((value, link) => {
+    const [src, tgt] = link.split('-').map(Number)
+    nodeOutgoing.set(src, (nodeOutgoing.get(src) || 0) + value)
+    nodeIncoming.set(tgt, (nodeIncoming.get(tgt) || 0) + value)
+  })
+  const getNodeValue = (idx: number) => nodeOutgoing.get(idx) ?? nodeIncoming.get(idx) ?? 0
+
+  const formatNodeValue = (v: number): string => {
+    if (metric.value === 'count') return String(Math.round(v))
+    return prettyBytesHelper(v, { binary: false })
+  }
+
   // 创建初始节点数组
   const initialNodes = Array.from(nodeMap.entries()).map(([name, index]) => ({
     id: index,
     name: name,
     nodeType: nodeTypeMap.get(name) || t('unknown'),
     layer: layerMap.get(name) || 0,
+    nodeValue: formatNodeValue(getNodeValue(index)),
     itemStyle: {
       color: layerColors[layerMap.get(name) || 0],
     },
@@ -415,6 +431,7 @@ const options = computed(() => ({
       data: {
         name: string
         nodeType?: string
+        nodeValue?: string
         source: number
         target: number
         value: number
@@ -422,7 +439,15 @@ const options = computed(() => ({
       }
     }) => {
       if (params.dataType === 'node') {
-        return `${params.data.name}<br/>${t('nodeType')}: ${params.data.nodeType || t('unknown')}`
+        const lines = [
+          `${params.data.name}`,
+          `${t('nodeType')}: ${params.data.nodeType || t('unknown')}`,
+        ]
+        if (params.data.nodeValue)
+          lines.push(
+            `${t(metric.value === 'count' ? 'connectionCount' : metric.value)}: ${params.data.nodeValue}`,
+          )
+        return lines.join('<br/>')
       } else if (params.dataType === 'edge') {
         const sourceNode = sankeyData.value.nodes.find((n) => n.id === params.data.source)
         const targetNode = sankeyData.value.nodes.find((n) => n.id === params.data.target)
@@ -461,14 +486,16 @@ const options = computed(() => ({
       label: {
         color: colorSet.baseContent,
         fontSize: isMiddleScreen.value ? 10 : 12,
-        formatter: (params: { name: string }) => {
+        formatter: (params: { name: string; data: { nodeValue?: string } }) => {
           const name = params.name
           const length = isFullScreen.value ? 45 : isMiddleScreen.value ? 20 : 30
-          return name.length > length ? name.substring(0, length) + '...' : name
+          const truncated = name.length > length ? name.substring(0, length) + '...' : name
+          const val = params.data?.nodeValue
+          return val ? `${truncated}\n${val}` : truncated
         },
       },
       nodeGap: 4,
-      nodeWidth: 15,
+      nodeWidth: 20,
       nodeAlign: 'left',
       animation: true,
       animationDuration: 1000,
