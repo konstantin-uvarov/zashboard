@@ -8,16 +8,18 @@ const MAX_DEVICES = 8
 interface SpeedPoint {
   name: number
   value: number
+  dl: number
+  ul: number
 }
 
-// Map from sourceIP -> ring buffer of {download, upload} speed points
-const deviceDownloadHistory = ref<Map<string, SpeedPoint[]>>(new Map())
-const deviceUploadHistory = ref<Map<string, SpeedPoint[]>>(new Map())
+// Map from sourceIP -> ring buffer of combined speed points
+const deviceSpeedHistory = ref<Map<string, SpeedPoint[]>>(new Map())
 
 // Grow-only set: once an IP enters the legend it never leaves
 const stableDeviceIPs = ref<Set<string>>(new Set())
 
-const initValue = () => new Array(timeSaved).fill(0).map((_, i) => ({ name: i, value: 0 }))
+const initValue = () =>
+  new Array(timeSaved).fill(0).map((_, i) => ({ name: i, value: 0, dl: 0, ul: 0 }))
 
 watch(
   activeConnections,
@@ -44,28 +46,25 @@ watch(
 
     // Update histories for all stable IPs (push 0 for inactive ones)
     for (const ip of stableDeviceIPs.value) {
-      if (!deviceDownloadHistory.value.has(ip)) {
-        deviceDownloadHistory.value.set(ip, initValue())
-        deviceUploadHistory.value.set(ip, initValue())
+      if (!deviceSpeedHistory.value.has(ip)) {
+        deviceSpeedHistory.value.set(ip, initValue())
       }
 
-      const dl = deviceDownloadHistory.value.get(ip)!
-      const ul = deviceUploadHistory.value.get(ip)!
+      const hist = deviceSpeedHistory.value.get(ip)!
+      const dl = downloadByIP.get(ip) ?? 0
+      const ul = uploadByIP.get(ip) ?? 0
 
-      dl.push({ name: timestamp, value: downloadByIP.get(ip) ?? 0 })
-      ul.push({ name: timestamp, value: uploadByIP.get(ip) ?? 0 })
+      hist.push({ name: timestamp, value: dl + ul, dl, ul })
 
       // Trim ring buffer
-      if (dl.length > timeSaved) {
-        deviceDownloadHistory.value.set(ip, dl.slice(-timeSaved))
-        deviceUploadHistory.value.set(ip, ul.slice(-timeSaved))
+      if (hist.length > timeSaved) {
+        deviceSpeedHistory.value.set(ip, hist.slice(-timeSaved))
       }
     }
 
     // Trigger reactivity
     stableDeviceIPs.value = new Set(stableDeviceIPs.value)
-    deviceDownloadHistory.value = new Map(deviceDownloadHistory.value)
-    deviceUploadHistory.value = new Map(deviceUploadHistory.value)
+    deviceSpeedHistory.value = new Map(deviceSpeedHistory.value)
   },
   { deep: false },
 )
@@ -84,20 +83,9 @@ const sortIPsNumerically = (ips: string[]) =>
 // Stable sorted list of device IPs — order and membership never change once set
 const stableSortedIPs = computed(() => sortIPsNumerically([...stableDeviceIPs.value]))
 
-export const deviceDownloadSeries = computed(() => {
-  return stableSortedIPs.value.map((ip) => ({
-    name: `↓ ${getIPLabelFromMap(ip)}`,
-    data: deviceDownloadHistory.value.get(ip) ?? initValue(),
-  }))
-})
-
-export const deviceUploadSeries = computed(() => {
-  return stableSortedIPs.value.map((ip) => ({
-    name: `↑ ${getIPLabelFromMap(ip)}`,
-    data: deviceUploadHistory.value.get(ip) ?? initValue(),
-  }))
-})
-
-export const deviceAllSeries = computed(() => {
-  return [...deviceDownloadSeries.value, ...deviceUploadSeries.value]
-})
+export const deviceCombinedSeries = computed(() =>
+  stableSortedIPs.value.map((ip) => ({
+    name: getIPLabelFromMap(ip),
+    data: deviceSpeedHistory.value.get(ip) ?? initValue(),
+  })),
+)

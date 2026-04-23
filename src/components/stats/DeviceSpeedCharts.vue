@@ -21,7 +21,7 @@
 </template>
 
 <script setup lang="ts">
-import { deviceAllSeries } from '@/composables/deviceSpeed'
+import { deviceCombinedSeries } from '@/composables/deviceSpeed'
 import { prettyBytesHelper } from '@/helper/utils'
 import { font, theme } from '@/store/settings'
 import { PauseCircleIcon, PlayCircleIcon } from '@heroicons/vue/24/outline'
@@ -92,7 +92,7 @@ const buildOptions = () => ({
   legend: {
     bottom: 0,
     type: 'scroll',
-    data: deviceAllSeries.value.map((s) => s.name),
+    data: deviceCombinedSeries.value.map((s) => s.name),
     textStyle: { color: colorSet.baseContent, fontFamily },
   },
   grid: { left: 60, top: 15, right: 8, bottom: 40 },
@@ -111,7 +111,9 @@ const buildOptions = () => ({
           (p) =>
             `<div style="display:flex;align-items:center;gap:4px;padding:1px 0">` +
             `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${p.color}"></span>` +
-            `${p.seriesName}: ${prettyBytesHelper(p.data.value, { binary: false, maximumFractionDigits: 1 })}/s` +
+            `${p.seriesName}: ` +
+            `↓ ${prettyBytesHelper(p.data.dl ?? 0, { binary: false, maximumFractionDigits: 1 })}/s` +
+            ` ↑ ${prettyBytesHelper(p.data.ul ?? 0, { binary: false, maximumFractionDigits: 1 })}/s` +
             `</div>`,
         )
         .join('') || '—',
@@ -141,7 +143,7 @@ const buildOptions = () => ({
       fontFamily,
     },
   },
-  series: deviceAllSeries.value.map((s) => {
+  series: deviceCombinedSeries.value.map((s) => {
     const c = getStableColor(s.name)
     return {
       name: s.name,
@@ -183,7 +185,7 @@ onMounted(() => {
   }
 
   watch(
-    deviceAllSeries,
+    deviceCombinedSeries,
     () => {
       if (isPaused.value) return
       myChart?.setOption(buildOptions())
