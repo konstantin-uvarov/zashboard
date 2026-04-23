@@ -185,6 +185,8 @@ export interface TopoFlowData {
   chainLast: string
   chainFirst: string
   count: number
+  download: number
+  upload: number
 }
 
 const topoFlowsDB = useIndexedDB('topo-flows')

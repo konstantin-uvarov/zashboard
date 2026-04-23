@@ -74,9 +74,20 @@ export const aggregateTopoFlows = (connections: Connection[]): TopoFlowData[] =>
     const chainFirst = chains[0]
     const key = `${sourceIP}|||${ruleKey}|||${chainLast}|||${chainFirst}`
     if (map.has(key)) {
-      map.get(key)!.count++
+      const existing = map.get(key)!
+      existing.count++
+      existing.download += conn.download
+      existing.upload += conn.upload
     } else {
-      map.set(key, { sourceIP, ruleKey, chainLast, chainFirst, count: 1 })
+      map.set(key, {
+        sourceIP,
+        ruleKey,
+        chainLast,
+        chainFirst,
+        count: 1,
+        download: conn.download,
+        upload: conn.upload,
+      })
     }
   })
   return Array.from(map.values())
@@ -94,7 +105,10 @@ export const mergeTopoFlows = (
   newFlows.forEach((item) => {
     const key = `${item.sourceIP}|||${item.ruleKey}|||${item.chainLast}|||${item.chainFirst}`
     if (map.has(key)) {
-      map.get(key)!.count += item.count
+      const existing = map.get(key)!
+      existing.count += item.count
+      existing.download += item.download
+      existing.upload += item.upload
     } else {
       map.set(key, { ...item })
     }

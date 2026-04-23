@@ -8,18 +8,29 @@
           @mouseenter="showTip($event, chartTip)"
         />
       </div>
-      <select
-        v-model="timeRange"
-        class="select select-sm font-normal"
-      >
-        <option
-          v-for="opt in TIME_RANGE_OPTIONS"
-          :key="opt.value"
-          :value="opt.value"
+      <div class="flex items-center gap-2">
+        <select
+          v-model="metric"
+          class="select select-sm font-normal"
         >
-          {{ opt.value === 'all' ? $t('allData') : opt.labelKey }}
-        </option>
-      </select>
+          <option value="download">{{ $t('download') }}</option>
+          <option value="upload">{{ $t('upload') }}</option>
+          <option value="total">{{ $t('total') }}</option>
+          <option value="count">{{ $t('connectionCount') }}</option>
+        </select>
+        <select
+          v-model="timeRange"
+          class="select select-sm font-normal"
+        >
+          <option
+            v-for="opt in TIME_RANGE_OPTIONS"
+            :key="opt.value"
+            :value="opt.value"
+          >
+            {{ opt.value === 'all' ? $t('allData') : opt.labelKey }}
+          </option>
+        </select>
+      </div>
     </div>
     <div
       :class="twMerge('relative h-96 w-full overflow-hidden pt-12')"
@@ -111,7 +122,7 @@ import {
 import { backgroundImage } from '@/helper/indexeddb'
 import { getIPDisplayLabel } from '@/helper/sourceip'
 import { useTooltip } from '@/helper/tooltip'
-import { isMiddleScreen } from '@/helper/utils'
+import { isMiddleScreen, prettyBytesHelper } from '@/helper/utils'
 import { activeConnections, closedConnections } from '@/store/connections'
 import { topoFlowsData } from '@/store/connHistory'
 import { blurIntensity, dashboardTransparent, font, theme } from '@/store/settings'
@@ -149,6 +160,10 @@ const fullScreenChart = ref()
 const fullScreenMyChart = ref<echarts.ECharts>()
 const { width: windowWidth, height: windowHeight } = useWindowSize()
 const timeRange = useLocalStorage<TimeRangeValue>('stats-topology-timerange', 'all')
+const metric = useLocalStorage<'download' | 'upload' | 'total' | 'count'>(
+  'stats-topology-metric',
+  'download',
+)
 
 const shouldRotate = computed(() => {
   return isFullScreen.value && isMiddleScreen.value && windowHeight.value > windowWidth.value
@@ -202,13 +217,29 @@ const sankeyData = computed(() => {
     return nodeMap.get(name)!
   }
 
+  const getMetricValue = (count: number, download: number, upload: number): number => {
+    switch (metric.value) {
+      case 'download':
+        return download
+      case 'upload':
+        return upload
+      case 'total':
+        return download + upload
+      case 'count':
+        return count
+    }
+  }
+
   const addFlow = (
     sourceIP: string,
     ruleKey: string,
     chainLast: string,
     chainFirst: string,
     count: number,
+    download: number,
+    upload: number,
   ) => {
+    const value = getMetricValue(count, download, upload)
     const sourceNode = addNode(sourceIP, 0, t('sourceIPAddress'))
     const ruleNode = addNode(ruleKey, 1, t('ruleMatch'))
 
@@ -216,17 +247,17 @@ const sankeyData = computed(() => {
       const chainExitNode = addNode(chainFirst, 3, t('proxyChainExit'))
       const link1 = `${sourceNode}-${ruleNode}`
       const link2 = `${ruleNode}-${chainExitNode}`
-      linkMap.set(link1, (linkMap.get(link1) || 0) + count)
-      linkMap.set(link2, (linkMap.get(link2) || 0) + count)
+      linkMap.set(link1, (linkMap.get(link1) || 0) + value)
+      linkMap.set(link2, (linkMap.get(link2) || 0) + value)
     } else {
       const chainLastNode = addNode(chainLast, 2, t('proxyChainEntry'))
       const chainFirstNode = addNode(chainFirst, 3, t('proxyChainExit'))
       const link1 = `${sourceNode}-${ruleNode}`
       const link2 = `${ruleNode}-${chainLastNode}`
       const link3 = `${chainLastNode}-${chainFirstNode}`
-      linkMap.set(link1, (linkMap.get(link1) || 0) + count)
-      linkMap.set(link2, (linkMap.get(link2) || 0) + count)
-      linkMap.set(link3, (linkMap.get(link3) || 0) + count)
+      linkMap.set(link1, (linkMap.get(link1) || 0) + value)
+      linkMap.set(link2, (linkMap.get(link2) || 0) + value)
+      linkMap.set(link3, (linkMap.get(link3) || 0) + value)
     }
   }
 
@@ -239,6 +270,8 @@ const sankeyData = computed(() => {
         flow.chainLast,
         flow.chainFirst,
         flow.count,
+        flow.download,
+        flow.upload,
       )
     })
     // Also include currently active connections (not yet persisted)
@@ -251,6 +284,8 @@ const sankeyData = computed(() => {
         chains[chains.length - 1],
         chains[0],
         1,
+        conn.download ?? 0,
+        conn.upload ?? 0,
       )
     })
   } else {
@@ -268,6 +303,8 @@ const sankeyData = computed(() => {
         chains[chains.length - 1],
         chains[0],
         1,
+        conn.download ?? 0,
+        conn.upload ?? 0,
       )
     })
   }
@@ -390,11 +427,16 @@ const options = computed(() => ({
         const sourceNode = sankeyData.value.nodes.find((n) => n.id === params.data.source)
         const targetNode = sankeyData.value.nodes.find((n) => n.id === params.data.target)
         // 使用原始值显示真实的连接数量
-        const displayValue = params.data.originalValue || params.data.value
+        const displayValue = params.data.originalValue ?? params.data.value
+        const isBytes = metric.value !== 'count'
+        const formattedValue = isBytes
+          ? prettyBytesHelper(displayValue, { binary: false })
+          : String(Math.round(displayValue))
+        const metricLabel = t(metric.value === 'count' ? 'connectionCount' : metric.value)
         if (sourceNode && targetNode) {
-          return `${sourceNode.name} → ${targetNode.name}<br/>${t('connectionCount')}: ${displayValue}`
+          return `${sourceNode.name} → ${targetNode.name}<br/>${metricLabel}: ${formattedValue}`
         }
-        return `${t('connectionCount')}: ${displayValue}`
+        return `${metricLabel}: ${formattedValue}`
       }
       return ''
     },
