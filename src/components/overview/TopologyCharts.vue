@@ -47,6 +47,23 @@
         ref="colorRef"
       />
       <div
+        v-for="overlay in nodeOverlays"
+        :key="overlay.id"
+        class="pointer-events-none absolute flex items-center justify-center overflow-hidden"
+        :style="{
+          left: `${overlay.x}px`,
+          top: `${overlay.y}px`,
+          width: `${overlay.w}px`,
+          height: `${overlay.h}px`,
+        }"
+      >
+        <span
+          class="text-[9px] font-bold text-white/90 select-none"
+          style="transform: rotate(-90deg); white-space: nowrap"
+          >{{ overlay.text }}</span
+        >
+      </div>
+      <div
         v-if="sankeyData.nodes.length === 0"
         class="text-base-content/50 absolute inset-0 flex items-center justify-center"
       >
@@ -82,7 +99,7 @@
   <Teleport to="body">
     <div
       v-if="isFullScreen"
-      class="bg-base-100 custom-background fixed inset-0 z-[9999] h-screen w-screen bg-cover bg-center"
+      class="bg-base-100 custom-background fixed relative inset-0 z-[9999] h-screen w-screen bg-cover bg-center"
       :class="`blur-intensity-${blurIntensity} custom-background-${dashboardTransparent}`"
       :style="backgroundImage"
     >
@@ -91,6 +108,23 @@
         :class="shouldRotate ? 'bg-base-100' : 'bg-base-100 h-full w-full'"
         :style="fullChartStyle"
       />
+      <div
+        v-for="overlay in fullScreenNodeOverlays"
+        :key="overlay.id"
+        class="pointer-events-none absolute flex items-center justify-center overflow-hidden"
+        :style="{
+          left: `${overlay.x}px`,
+          top: `${overlay.y}px`,
+          width: `${overlay.w}px`,
+          height: `${overlay.h}px`,
+        }"
+      >
+        <span
+          class="text-[9px] font-bold text-white/90 select-none"
+          style="transform: rotate(-90deg); white-space: nowrap"
+          >{{ overlay.text }}</span
+        >
+      </div>
       <div class="fixed right-4 bottom-4 mb-[env(safe-area-inset-bottom)] flex flex-col gap-1">
         <button
           class="btn btn-ghost btn-circle btn-sm"
@@ -504,15 +538,27 @@ const options = computed(() => ({
   ],
 }))
 
-// Overlays metric values as text inside each Sankey node rectangle using ECharts graphic elements.
+// Compute HTML overlay positions for Sankey node value labels.
 // Sankey nodes store layout as { x, y, dx, dy } on graph nodes (not getData().getItemLayout()).
-// Coordinates are relative to seriesModel.layoutInfo, which offsets the content area from the canvas edge.
-const updateNodeValueGraphics = (chartInstance: echarts.ECharts) => {
+// Coordinates are relative to seriesModel.layoutInfo, offset from the canvas edge.
+interface NodeOverlay {
+  id: string
+  x: number
+  y: number
+  w: number
+  h: number
+  text: string
+}
+
+const nodeOverlays = ref<NodeOverlay[]>([])
+const fullScreenNodeOverlays = ref<NodeOverlay[]>([])
+
+const computeNodeOverlays = (
+  chartInstance: echarts.ECharts,
+  chartEl: HTMLElement | null | undefined,
+): NodeOverlay[] => {
   const nodes = sankeyData.value.nodes
-  if (nodes.length === 0) {
-    chartInstance.setOption({ graphic: [] })
-    return
-  }
+  if (nodes.length === 0) return []
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const seriesModel = (chartInstance as any).getModel().getSeriesByIndex(0)
@@ -521,46 +567,38 @@ const updateNodeValueGraphics = (chartInstance: echarts.ECharts) => {
       dataIndex: number
       getLayout: () => { x: number; y: number; dx: number; dy: number } | undefined
     }>
-    console.debug('[topology] layoutInfo:', layoutInfo, 'graphNodes count:', graphNodes.length, 'data nodes count:', nodes.length)
-    const elements: object[] = []
+    const offsetTop = chartEl?.offsetTop ?? 0
+    const offsetLeft = chartEl?.offsetLeft ?? 0
+    const overlays: NodeOverlay[] = []
     nodes.forEach((_node, idx) => {
       if (!_node.nodeValue) return
       const graphNode = graphNodes.find((n) => n.dataIndex === idx)
-      if (!graphNode) {
-        console.debug('[topology] no graphNode for idx', idx)
-        return
-      }
+      if (!graphNode) return
       const layout = graphNode.getLayout()
-      if (!layout) {
-        console.debug('[topology] no layout for idx', idx)
-        return
-      }
+      if (!layout) return
       const { x, y, dx, dy } = layout
-      console.debug(`[topology] node[${idx}] "${_node.name}" value="${_node.nodeValue}" x=${x} y=${y} dx=${dx} dy=${dy} → canvas(${layoutInfo.x + x + dx / 2}, ${layoutInfo.y + y + dy / 2})`)
       if (dy < 14) return
-      elements.push({
+      overlays.push({
         id: `node-val-${idx}`,
-        type: 'text',
-        x: layoutInfo.x + x + dx / 2,
-        y: layoutInfo.y + y + dy / 2,
-        rotation: -Math.PI / 2,
-        style: {
-          text: _node.nodeValue,
-          fill: 'rgba(255,255,255,0.9)',
-          fontSize: 9,
-          fontWeight: 'bold',
-          align: 'center',
-          verticalAlign: 'middle',
-        },
-        silent: true,
-        z: 200,
+        x: offsetLeft + layoutInfo.x + x,
+        y: offsetTop + layoutInfo.y + y,
+        w: dx,
+        h: dy,
+        text: _node.nodeValue,
       })
     })
-    console.debug('[topology] setting', elements.length, 'graphic elements')
-    chartInstance.setOption({ graphic: elements })
-  } catch (e) {
-    console.error('[topology] updateNodeValueGraphics error:', e)
+    return overlays
+  } catch {
+    return []
   }
+}
+
+const updateNodeValueGraphics = (chartInstance: echarts.ECharts) => {
+  nodeOverlays.value = computeNodeOverlays(chartInstance, chart.value)
+}
+
+const updateFullScreenNodeValueGraphics = (chartInstance: echarts.ECharts) => {
+  fullScreenNodeOverlays.value = computeNodeOverlays(chartInstance, fullScreenChart.value)
 }
 
 onMounted(() => {
@@ -573,7 +611,8 @@ onMounted(() => {
   const myChart = echarts.init(chart.value)
 
   myChart.setOption(options.value)
-  updateNodeValueGraphics(myChart)
+  nextTick(() => updateNodeValueGraphics(myChart))
+  myChart.on('finished', () => updateNodeValueGraphics(myChart))
   myChart.on('showTip', () => {
     isPaused.value = true
   })
@@ -588,9 +627,10 @@ onMounted(() => {
 
     if (myChart && newData.nodes.length > 0) {
       myChart.setOption(options.value)
-      updateNodeValueGraphics(myChart)
+      nextTick(() => updateNodeValueGraphics(myChart))
     } else if (myChart && newData.nodes.length === 0) {
       myChart.clear()
+      nodeOverlays.value = []
     }
 
     if (isFullScreen.value) {
@@ -607,9 +647,10 @@ onMounted(() => {
         }
         if (fullScreenMyChart.value && newData.nodes.length > 0) {
           fullScreenMyChart.value.setOption(options.value)
-          updateNodeValueGraphics(fullScreenMyChart.value)
+          nextTick(() => updateFullScreenNodeValueGraphics(fullScreenMyChart.value!))
         } else if (fullScreenMyChart.value && newData.nodes.length === 0) {
           fullScreenMyChart.value.clear()
+          fullScreenNodeOverlays.value = []
         }
       })
     }
@@ -620,11 +661,11 @@ onMounted(() => {
   watch([theme, font], () => {
     if (myChart) {
       myChart.setOption(options.value)
-      updateNodeValueGraphics(myChart)
+      nextTick(() => updateNodeValueGraphics(myChart))
     }
     if (fullScreenMyChart.value) {
       fullScreenMyChart.value.setOption(options.value)
-      updateNodeValueGraphics(fullScreenMyChart.value)
+      nextTick(() => updateFullScreenNodeValueGraphics(fullScreenMyChart.value!))
     }
   })
 
@@ -640,15 +681,19 @@ onMounted(() => {
           fullScreenMyChart.value.on('hideTip', () => {
             isPaused.value = false
           })
+          fullScreenMyChart.value.on('finished', () => {
+            if (fullScreenMyChart.value) updateFullScreenNodeValueGraphics(fullScreenMyChart.value)
+          })
         }
         if (fullScreenMyChart.value && sankeyData.value.nodes.length > 0) {
           fullScreenMyChart.value.setOption(options.value)
-          updateNodeValueGraphics(fullScreenMyChart.value)
+          nextTick(() => updateFullScreenNodeValueGraphics(fullScreenMyChart.value!))
         }
       })
     } else {
       fullScreenMyChart.value?.dispose()
       fullScreenMyChart.value = undefined
+      fullScreenNodeOverlays.value = []
     }
   })
 
@@ -657,7 +702,7 @@ onMounted(() => {
     myChart.resize()
     updateNodeValueGraphics(myChart)
     fullScreenMyChart.value?.resize()
-    if (fullScreenMyChart.value) updateNodeValueGraphics(fullScreenMyChart.value)
+    if (fullScreenMyChart.value) updateFullScreenNodeValueGraphics(fullScreenMyChart.value)
   }, 100)
 
   watch(width, resize)
