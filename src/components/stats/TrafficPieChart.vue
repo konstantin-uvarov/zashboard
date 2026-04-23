@@ -14,13 +14,14 @@
         <option :value="ConnectionHistoryType.Process">{{ $t('aggregateByProcess') }}</option>
       </select>
     </div>
-    <div class="card-body relative">
+    <div class="card-body relative p-2!">
       <div
         ref="chartEl"
-        class="h-64 w-full"
+        :style="{ height: chartHeight + 'px' }"
+        class="w-full"
       />
       <div
-        v-if="pieData.length === 0"
+        v-if="chartData.length === 0"
         class="text-base-content/50 absolute inset-0 flex items-center justify-center"
       >
         {{ $t('noData') }}
@@ -41,16 +42,17 @@ import { prettyBytesHelper } from '@/helper/utils'
 import { aggregatedDataMap } from '@/store/connHistory'
 import { font, theme } from '@/store/settings'
 import { useElementSize, useLocalStorage } from '@vueuse/core'
-import { PieChart } from 'echarts/charts'
-import { LegendComponent, TooltipComponent } from 'echarts/components'
+import { BarChart } from 'echarts/charts'
+import { GridComponent, TooltipComponent } from 'echarts/components'
 import * as echarts from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { debounce } from 'lodash'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
-echarts.use([PieChart, LegendComponent, TooltipComponent, CanvasRenderer])
+echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer])
 
-const MAX_SLICES = 10
+const BAR_HEIGHT = 28
+const CHART_MARGIN = 50
 
 const chartEl = ref<HTMLElement | null>(null)
 const colorRef = ref<HTMLElement | null>(null)
@@ -77,65 +79,80 @@ const updateFontFamily = () => {
   fontFamily = getComputedStyle(colorRef.value).fontFamily
 }
 
-const pieData = computed(() => {
+const chartData = computed(() => {
   const entries = aggregatedDataMap.value[groupBy.value] ?? []
-  const sorted = [...entries].sort((a, b) => b.download - a.download)
-  const top = sorted.slice(0, MAX_SLICES)
-  const rest = sorted.slice(MAX_SLICES)
-
-  const result = top.map((entry) => {
-    const label =
-      groupBy.value === ConnectionHistoryType.SourceIP ? getIPLabelFromMap(entry.key) : entry.key
-    const itemStyle =
-      groupBy.value === ConnectionHistoryType.SourceIP ? { color: getIPColor(entry.key) } : {}
-    return { name: label, value: entry.download, itemStyle }
-  })
-
-  if (rest.length > 0) {
-    const otherTotal = rest.reduce((sum, e) => sum + e.download, 0)
-    result.push({ name: 'Other', value: otherTotal, itemStyle: {} })
-  }
-
-  return result.filter((d) => d.value > 0)
+  return [...entries]
+    .sort((a, b) => b.download - a.download)
+    .map((entry) => {
+      const label =
+        groupBy.value === ConnectionHistoryType.SourceIP ? getIPLabelFromMap(entry.key) : entry.key
+      const color =
+        groupBy.value === ConnectionHistoryType.SourceIP ? getIPColor(entry.key) : undefined
+      return { label, download: entry.download, upload: entry.upload, color }
+    })
+    .filter((d) => d.download > 0 || d.upload > 0)
 })
 
-const buildOptions = () => ({
-  tooltip: {
-    trigger: 'item',
-    backgroundColor: colorSet.base70,
-    borderColor: colorSet.base70,
-    textStyle: {
-      color: colorSet.baseContent,
-      fontFamily,
-    },
-    formatter: (params: { name: string; value: number; percent: number }) => {
-      const bytes = prettyBytesHelper(params.value, { binary: false })
-      return `<div style="padding:2px 4px">${params.name}<br/>${bytes} (${params.percent}%)</div>`
-    },
-  },
-  legend: {
-    orient: 'vertical',
-    right: 0,
-    top: 'center',
-    textStyle: {
-      color: colorSet.baseContent,
-      fontFamily,
-    },
-  },
-  series: [
-    {
-      type: 'pie',
-      radius: ['40%', '70%'],
-      center: ['40%', '50%'],
-      avoidLabelOverlap: true,
-      label: { show: false },
-      emphasis: {
-        label: { show: true, fontSize: 12 },
+const chartHeight = computed(() =>
+  Math.max(120, chartData.value.length * BAR_HEIGHT + CHART_MARGIN),
+)
+
+const buildOptions = () => {
+  const labels = chartData.value.map((d) => d.label)
+  const data = chartData.value.map((d) => ({
+    value: d.download,
+    itemStyle: d.color ? { color: d.color } : {},
+  }))
+
+  return {
+    grid: { left: 120, right: 16, top: 8, bottom: 28, containLabel: false },
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'shadow' },
+      backgroundColor: colorSet.base70,
+      borderColor: colorSet.base70,
+      textStyle: { color: colorSet.baseContent, fontFamily },
+      formatter: (params: { dataIndex: number }[]) => {
+        const idx = params[0]?.dataIndex ?? 0
+        const d = chartData.value[idx]
+        if (!d) return ''
+        const dl = prettyBytesHelper(d.download, { binary: false })
+        const ul = prettyBytesHelper(d.upload, { binary: false })
+        return `<div style="padding:2px 6px">${d.label}<br/>&#x2193; ${dl}<br/>&#x2191; ${ul}</div>`
       },
-      data: pieData.value,
     },
-  ],
-})
+    xAxis: {
+      type: 'value',
+      axisLabel: {
+        color: colorSet.baseContent,
+        fontFamily,
+        formatter: (v: number) => prettyBytesHelper(v, { binary: false }),
+      },
+      splitLine: { lineStyle: { color: colorSet.baseContent + '20' } },
+    },
+    yAxis: {
+      type: 'category',
+      data: labels,
+      inverse: true,
+      axisLabel: {
+        color: colorSet.baseContent,
+        fontFamily,
+        width: 110,
+        overflow: 'truncate',
+      },
+      axisTick: { show: false },
+      axisLine: { show: false },
+    },
+    series: [
+      {
+        type: 'bar',
+        data,
+        barMaxWidth: 20,
+        itemStyle: { borderRadius: [0, 3, 3, 0] },
+      },
+    ],
+  }
+}
 
 let myChart: echarts.ECharts | null = null
 
@@ -157,8 +174,12 @@ onMounted(() => {
     myChart.setOption(buildOptions())
   }
 
-  watch(pieData, () => {
-    myChart?.setOption(buildOptions())
+  watch(chartData, () => {
+    myChart?.setOption(buildOptions(), true)
+  })
+
+  watch(chartHeight, () => {
+    myChart?.resize()
   })
 
   const { width } = useElementSize(chartEl)
