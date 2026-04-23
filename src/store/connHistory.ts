@@ -2,8 +2,11 @@ import { getProcessFromConnection } from '@/helper'
 import {
   ConnectionHistoryType,
   getConnectionHistoryFromIndexedDB,
+  getTopoFlowsFromIndexedDB,
   saveConnectionHistoryToIndexedDB,
+  saveTopoFlowsToIndexedDB,
   type ConnectionHistoryData,
+  type TopoFlowData,
 } from '@/helper/indexeddb'
 import type { Connection } from '@/types'
 import ipaddr from 'ipaddr.js'
@@ -30,6 +33,8 @@ export const aggregatedDataMap = ref<Record<ConnectionHistoryType, ConnectionHis
   [ConnectionHistoryType.Outbound]: [],
 })
 
+export const topoFlowsData = ref<TopoFlowData[]>([])
+
 export const initAggregatedDataMap = () => {
   aggregatedDataMap.value = {
     [ConnectionHistoryType.SourceIP]: [],
@@ -51,6 +56,50 @@ export const initAggregatedDataMap = () => {
     }
     resolve(true)
   })
+}
+
+export const initTopoFlowsData = async () => {
+  topoFlowsData.value = []
+  topoFlowsData.value = await getTopoFlowsFromIndexedDB(uuid())
+}
+
+export const aggregateTopoFlows = (connections: Connection[]): TopoFlowData[] => {
+  const map = new Map<string, TopoFlowData>()
+  connections.forEach((conn) => {
+    const chains = conn.chains || []
+    if (chains.length === 0) return
+    const sourceIP = conn.metadata.sourceIP
+    const ruleKey = conn.rulePayload ? `${conn.rule}: ${conn.rulePayload}` : conn.rule
+    const chainLast = chains[chains.length - 1]
+    const chainFirst = chains[0]
+    const key = `${sourceIP}|||${ruleKey}|||${chainLast}|||${chainFirst}`
+    if (map.has(key)) {
+      map.get(key)!.count++
+    } else {
+      map.set(key, { sourceIP, ruleKey, chainLast, chainFirst, count: 1 })
+    }
+  })
+  return Array.from(map.values())
+}
+
+export const mergeTopoFlows = (
+  historical: TopoFlowData[],
+  newFlows: TopoFlowData[],
+): TopoFlowData[] => {
+  const map = new Map<string, TopoFlowData>()
+  historical.forEach((item) => {
+    const key = `${item.sourceIP}|||${item.ruleKey}|||${item.chainLast}|||${item.chainFirst}`
+    map.set(key, { ...item })
+  })
+  newFlows.forEach((item) => {
+    const key = `${item.sourceIP}|||${item.ruleKey}|||${item.chainLast}|||${item.chainFirst}`
+    if (map.has(key)) {
+      map.get(key)!.count += item.count
+    } else {
+      map.set(key, { ...item })
+    }
+  })
+  return Array.from(map.values())
 }
 
 export const aggregateConnections = (
@@ -140,5 +189,14 @@ export const saveConnectionHistory = async (newClosedConnections: Connection[]) 
     } catch (error) {
       console.error(`Failed to save connection history for ${type}:`, error)
     }
+  }
+
+  try {
+    const newFlows = aggregateTopoFlows(newClosedConnections)
+    const merged = mergeTopoFlows(topoFlowsData.value, newFlows)
+    topoFlowsData.value = merged
+    await saveTopoFlowsToIndexedDB(uuid(), merged)
+  } catch (error) {
+    console.error('Failed to save topology flows:', error)
   }
 }

@@ -113,6 +113,7 @@ import { getIPDisplayLabel } from '@/helper/sourceip'
 import { useTooltip } from '@/helper/tooltip'
 import { isMiddleScreen } from '@/helper/utils'
 import { activeConnections, closedConnections } from '@/store/connections'
+import { topoFlowsData } from '@/store/connHistory'
 import { blurIntensity, dashboardTransparent, font, theme } from '@/store/settings'
 import {
   ArrowsPointingInIcon,
@@ -186,20 +187,6 @@ const updateFontFamily = () => {
 }
 
 const sankeyData = computed(() => {
-  let connections
-  if (timeRange.value === 'all') {
-    connections = [...closedConnections.value, ...activeConnections.value]
-  } else {
-    const rangeMs = getTimeRangeMs(timeRange.value)
-    connections = filterConnectionsByTimeRange(
-      [...closedConnections.value, ...activeConnections.value],
-      rangeMs,
-    )
-  }
-  if (!connections || connections.length === 0) {
-    return { nodes: [], links: [] }
-  }
-
   const nodeMap = new Map<string, number>()
   const linkMap = new Map<string, number>()
   const layerMap = new Map<string, number>()
@@ -215,40 +202,79 @@ const sankeyData = computed(() => {
     return nodeMap.get(name)!
   }
 
-  connections.forEach((conn) => {
-    const sourceIP = getIPDisplayLabel(conn.metadata.sourceIP)
-    const rulePayload = conn.rulePayload ? `${conn.rule}: ${conn.rulePayload}` : conn.rule
-    const chains = conn.chains || []
-
-    if (chains.length === 0) return
-
-    const chainLast = chains[chains.length - 1]
-    const chainFirst = chains[0]
-
+  const addFlow = (
+    sourceIP: string,
+    ruleKey: string,
+    chainLast: string,
+    chainFirst: string,
+    count: number,
+  ) => {
     const sourceNode = addNode(sourceIP, 0, t('sourceIPAddress'))
-    const ruleNode = addNode(rulePayload, 1, t('ruleMatch'))
+    const ruleNode = addNode(ruleKey, 1, t('ruleMatch'))
 
     if (chainFirst === chainLast) {
       const chainExitNode = addNode(chainFirst, 3, t('proxyChainExit'))
-
       const link1 = `${sourceNode}-${ruleNode}`
       const link2 = `${ruleNode}-${chainExitNode}`
-
-      linkMap.set(link1, (linkMap.get(link1) || 0) + 1)
-      linkMap.set(link2, (linkMap.get(link2) || 0) + 1)
+      linkMap.set(link1, (linkMap.get(link1) || 0) + count)
+      linkMap.set(link2, (linkMap.get(link2) || 0) + count)
     } else {
       const chainLastNode = addNode(chainLast, 2, t('proxyChainEntry'))
       const chainFirstNode = addNode(chainFirst, 3, t('proxyChainExit'))
-
       const link1 = `${sourceNode}-${ruleNode}`
       const link2 = `${ruleNode}-${chainLastNode}`
       const link3 = `${chainLastNode}-${chainFirstNode}`
-
-      linkMap.set(link1, (linkMap.get(link1) || 0) + 1)
-      linkMap.set(link2, (linkMap.get(link2) || 0) + 1)
-      linkMap.set(link3, (linkMap.get(link3) || 0) + 1)
+      linkMap.set(link1, (linkMap.get(link1) || 0) + count)
+      linkMap.set(link2, (linkMap.get(link2) || 0) + count)
+      linkMap.set(link3, (linkMap.get(link3) || 0) + count)
     }
-  })
+  }
+
+  if (timeRange.value === 'all') {
+    // Use persistent topo flows for full history
+    topoFlowsData.value.forEach((flow) => {
+      addFlow(
+        getIPDisplayLabel(flow.sourceIP),
+        flow.ruleKey,
+        flow.chainLast,
+        flow.chainFirst,
+        flow.count,
+      )
+    })
+    // Also include currently active connections (not yet persisted)
+    activeConnections.value.forEach((conn) => {
+      const chains = conn.chains || []
+      if (chains.length === 0) return
+      addFlow(
+        getIPDisplayLabel(conn.metadata.sourceIP),
+        conn.rulePayload ? `${conn.rule}: ${conn.rulePayload}` : conn.rule,
+        chains[chains.length - 1],
+        chains[0],
+        1,
+      )
+    })
+  } else {
+    const rangeMs = getTimeRangeMs(timeRange.value)
+    const connections = filterConnectionsByTimeRange(
+      [...closedConnections.value, ...activeConnections.value],
+      rangeMs,
+    )
+    connections.forEach((conn) => {
+      const chains = conn.chains || []
+      if (chains.length === 0) return
+      addFlow(
+        getIPDisplayLabel(conn.metadata.sourceIP),
+        conn.rulePayload ? `${conn.rule}: ${conn.rulePayload}` : conn.rule,
+        chains[chains.length - 1],
+        chains[0],
+        1,
+      )
+    })
+  }
+
+  if (nodeMap.size === 0) {
+    return { nodes: [], links: [] }
+  }
 
   // 创建初始节点数组
   const initialNodes = Array.from(nodeMap.entries()).map(([name, index]) => ({

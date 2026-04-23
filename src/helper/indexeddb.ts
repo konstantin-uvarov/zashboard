@@ -178,3 +178,31 @@ export const getConnectionHistoryFromIndexedDB = async (
 export const clearConnectionHistoryFromIndexedDB = async () => {
   return connectionHistoryDB.clear()
 }
+
+export interface TopoFlowData {
+  sourceIP: string
+  ruleKey: string
+  chainLast: string
+  chainFirst: string
+  count: number
+}
+
+const topoFlowsDB = useIndexedDB('topo-flows')
+
+export const saveTopoFlowsToIndexedDB = async (uuid: string, data: TopoFlowData[]) => {
+  return topoFlowsDB.put(uuid, JSON.stringify(data))
+}
+
+export const getTopoFlowsFromIndexedDB = async (uuid: string): Promise<TopoFlowData[]> => {
+  const jsonData = await topoFlowsDB.get(uuid)
+  if (!jsonData) return []
+  try {
+    return JSON.parse(jsonData) as TopoFlowData[]
+  } catch {
+    return []
+  }
+}
+
+export const clearTopoFlowsFromIndexedDB = async () => {
+  return topoFlowsDB.clear()
+}
