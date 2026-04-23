@@ -16,16 +16,15 @@
     </div>
     <div class="card-body relative">
       <div
-        v-if="pieData.length === 0"
-        class="text-base-content/50 flex h-64 items-center justify-center"
-      >
-        {{ $t('noData') }}
-      </div>
-      <div
-        v-else
         ref="chartEl"
         class="h-64 w-full"
       />
+      <div
+        v-if="pieData.length === 0"
+        class="text-base-content/50 absolute inset-0 flex items-center justify-center"
+      >
+        {{ $t('noData') }}
+      </div>
       <span
         class="border-b-primary/30 border-t-primary/60 border-l-info/30 border-r-info/60 text-base-content/10 bg-base-100/70 hidden"
         ref="colorRef"
