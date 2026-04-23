@@ -47,7 +47,7 @@ import { GridComponent, TooltipComponent } from 'echarts/components'
 import * as echarts from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { debounce } from 'lodash'
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer])
 
@@ -174,11 +174,9 @@ onMounted(() => {
     myChart.setOption(buildOptions())
   }
 
-  watch(chartData, () => {
+  watch(chartData, async () => {
+    await nextTick()
     myChart?.setOption(buildOptions(), true)
-  })
-
-  watch(chartHeight, () => {
     myChart?.resize()
   })
 
