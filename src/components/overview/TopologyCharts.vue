@@ -505,7 +505,8 @@ const options = computed(() => ({
 }))
 
 // Overlays metric values as text inside each Sankey node rectangle using ECharts graphic elements.
-// Node positions are read from ECharts' internal layout after setOption completes.
+// Sankey nodes store layout as { x, y, dx, dy } on graph nodes (not getData().getItemLayout()).
+// Coordinates are relative to seriesModel.layoutInfo, which offsets the content area from the canvas edge.
 const updateNodeValueGraphics = (chartInstance: echarts.ECharts) => {
   const nodes = sankeyData.value.nodes
   if (nodes.length === 0) {
@@ -514,24 +515,29 @@ const updateNodeValueGraphics = (chartInstance: echarts.ECharts) => {
   }
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const data = (chartInstance as any).getModel().getSeriesByIndex(0).getData()
+    const seriesModel = (chartInstance as any).getModel().getSeriesByIndex(0)
+    const layoutInfo = seriesModel.layoutInfo as { x: number; y: number }
+    const graphNodes = seriesModel.getGraph().nodes as Array<{
+      dataIndex: number
+      getLayout: () => { x: number; y: number; dx: number; dy: number } | undefined
+    }>
     const elements: object[] = []
-    nodes.forEach((node, idx) => {
-      if (!node.nodeValue) return
-      const layout = data.getItemLayout(idx) as
-        | { x: number; y: number; width: number; height: number }
-        | undefined
+    nodes.forEach((_node, idx) => {
+      if (!_node.nodeValue) return
+      const graphNode = graphNodes.find((n) => n.dataIndex === idx)
+      if (!graphNode) return
+      const layout = graphNode.getLayout()
       if (!layout) return
-      const { x, y, width, height } = layout
-      if (height < 14) return
+      const { x, y, dx, dy } = layout
+      if (dy < 14) return
       elements.push({
         id: `node-val-${idx}`,
         type: 'text',
-        x: x + width / 2,
-        y: y + height / 2,
+        x: layoutInfo.x + x + dx / 2,
+        y: layoutInfo.y + y + dy / 2,
         rotation: -Math.PI / 2,
         style: {
-          text: node.nodeValue,
+          text: _node.nodeValue,
           fill: 'rgba(255,255,255,0.9)',
           fontSize: 9,
           fontWeight: 'bold',
@@ -544,7 +550,7 @@ const updateNodeValueGraphics = (chartInstance: echarts.ECharts) => {
     })
     chartInstance.setOption({ graphic: elements })
   } catch {
-    // internal API unavailable
+    // internal API unavailable — values simply won't overlay
   }
 }
 
