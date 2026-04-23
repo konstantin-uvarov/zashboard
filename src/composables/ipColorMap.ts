@@ -1,5 +1,6 @@
-// Shared deterministic color assignment for IP addresses / keys.
-// Same key always maps to the same color regardless of render order.
+// Shared sequential color assignment for IP addresses / keys.
+// Colors are assigned on first appearance and persisted to localStorage
+// so they remain stable across page refreshes.
 
 export const PALETTE = [
   '#5470c6',
@@ -20,15 +21,34 @@ export const PALETTE = [
   '#56ccf2',
 ]
 
-const hashCode = (str: string): number => {
-  let hash = 0
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash << 5) - hash + str.charCodeAt(i)
-    hash |= 0
+const STORAGE_KEY = 'ip-color-assignments'
+
+const loadFromStorage = (): Map<string, string> => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY)
+    if (saved) return new Map(JSON.parse(saved) as [string, string][])
+  } catch {
+    // ignore
   }
-  return Math.abs(hash)
+  return new Map()
+}
+
+const colorMap = loadFromStorage()
+let nextIdx = colorMap.size
+
+const saveToStorage = () => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([...colorMap.entries()]))
+  } catch {
+    // ignore
+  }
 }
 
 export const getIPColor = (key: string): string => {
-  return PALETTE[hashCode(key) % PALETTE.length]
+  if (!colorMap.has(key)) {
+    colorMap.set(key, PALETTE[nextIdx % PALETTE.length])
+    nextIdx++
+    saveToStorage()
+  }
+  return colorMap.get(key)!
 }
