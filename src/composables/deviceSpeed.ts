@@ -73,10 +73,23 @@ const topDeviceIPs = computed(() => {
     scored.push({ ip, score: avgDl + avgUl })
   }
 
-  return scored
+  const topIPs = scored
     .sort((a, b) => b.score - a.score)
     .slice(0, MAX_DEVICES)
     .map((s) => s.ip)
+
+  // Sort selected IPs numerically so legend order never changes with speed
+  topIPs.sort((a, b) => {
+    const partsA = a.split('.').map(Number)
+    const partsB = b.split('.').map(Number)
+    for (let i = 0; i < 4; i++) {
+      const diff = (partsA[i] ?? 0) - (partsB[i] ?? 0)
+      if (diff !== 0) return diff
+    }
+    return 0
+  })
+
+  return topIPs
 })
 
 export const deviceDownloadSeries = computed(() => {
