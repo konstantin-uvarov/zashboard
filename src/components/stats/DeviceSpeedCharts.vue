@@ -8,6 +8,15 @@
       class="text-base-content/10 bg-base-100/70 hidden"
       ref="colorRef"
     />
+    <button
+      class="btn btn-ghost btn-xs absolute right-1 bottom-0"
+      @click="isPaused = !isPaused"
+    >
+      <component
+        :is="!isPaused ? PauseCircleIcon : PlayCircleIcon"
+        class="h-4 w-4"
+      />
+    </button>
   </div>
 </template>
 
@@ -15,6 +24,7 @@
 import { deviceAllSeries } from '@/composables/deviceSpeed'
 import { prettyBytesHelper } from '@/helper/utils'
 import { font, theme } from '@/store/settings'
+import { PauseCircleIcon, PlayCircleIcon } from '@heroicons/vue/24/outline'
 import { useElementSize } from '@vueuse/core'
 import { LineChart } from 'echarts/charts'
 import { GridComponent, LegendComponent, TooltipComponent } from 'echarts/components'
@@ -24,27 +34,6 @@ import { debounce } from 'lodash'
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 
 echarts.use([LineChart, GridComponent, LegendComponent, TooltipComponent, CanvasRenderer])
-
-const chartEl = ref<HTMLElement | null>(null)
-const colorRef = ref<HTMLElement | null>(null)
-
-const colorSet = { baseContent: '', base70: '', baseContent10: '' }
-let fontFamily = ''
-
-const updateColorSet = () => {
-  if (!colorRef.value) return
-  const style = getComputedStyle(colorRef.value)
-  colorSet.baseContent = style.getPropertyValue('--color-base-content').trim()
-  colorSet.base70 = style.backgroundColor
-  colorSet.baseContent10 = style.color
-}
-const updateFontFamily = () => {
-  if (!colorRef.value) return
-  fontFamily = getComputedStyle(colorRef.value).fontFamily
-}
-
-const labelFormatter = (value: number) =>
-  `${prettyBytesHelper(value, { maximumFractionDigits: 0, binary: false })}/s`
 
 const PALETTE = [
   '#5470c6',
@@ -65,8 +54,41 @@ const PALETTE = [
   '#56ccf2',
 ]
 
+// Stable name → color map: once assigned, color never changes for a device
+const nameColorMap = new Map<string, string>()
+let nextColorIdx = 0
+
+const getStableColor = (name: string) => {
+  if (!nameColorMap.has(name)) {
+    nameColorMap.set(name, PALETTE[nextColorIdx % PALETTE.length])
+    nextColorIdx++
+  }
+  return nameColorMap.get(name)!
+}
+
+const chartEl = ref<HTMLElement | null>(null)
+const colorRef = ref<HTMLElement | null>(null)
+const isPaused = ref(false)
+
+const colorSet = { baseContent: '', base70: '', baseContent10: '' }
+let fontFamily = ''
+
+const updateColorSet = () => {
+  if (!colorRef.value) return
+  const style = getComputedStyle(colorRef.value)
+  colorSet.baseContent = style.getPropertyValue('--color-base-content').trim()
+  colorSet.base70 = style.backgroundColor
+  colorSet.baseContent10 = style.color
+}
+const updateFontFamily = () => {
+  if (!colorRef.value) return
+  fontFamily = getComputedStyle(colorRef.value).fontFamily
+}
+
+const labelFormatter = (value: number) =>
+  `${prettyBytesHelper(value, { maximumFractionDigits: 0, binary: false })}/s`
+
 const buildOptions = () => ({
-  color: PALETTE,
   legend: {
     bottom: 0,
     type: 'scroll',
@@ -119,13 +141,14 @@ const buildOptions = () => ({
       fontFamily,
     },
   },
-  series: deviceAllSeries.value.map((s, i) => {
-    const c = PALETTE[i % PALETTE.length]
+  series: deviceAllSeries.value.map((s) => {
+    const c = getStableColor(s.name)
     return {
       name: s.name,
       type: 'line',
       symbol: 'none',
       smooth: true,
+      itemStyle: { color: c },
       lineStyle: { width: 1, color: c },
       emphasis: { disabled: true },
       data: s.data,
@@ -159,7 +182,14 @@ onMounted(() => {
     myChart.setOption(buildOptions())
   }
 
-  watch(deviceAllSeries, () => myChart?.setOption(buildOptions()), { deep: false })
+  watch(
+    deviceAllSeries,
+    () => {
+      if (isPaused.value) return
+      myChart?.setOption(buildOptions())
+    },
+    { deep: false },
+  )
 
   const { width } = useElementSize(chartEl)
   watch(
