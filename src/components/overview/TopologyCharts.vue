@@ -486,12 +486,10 @@ const options = computed(() => ({
       label: {
         color: colorSet.baseContent,
         fontSize: isMiddleScreen.value ? 10 : 12,
-        formatter: (params: { name: string; data: { nodeValue?: string } }) => {
+        formatter: (params: { name: string }) => {
           const name = params.name
           const length = isFullScreen.value ? 45 : isMiddleScreen.value ? 20 : 30
-          const truncated = name.length > length ? name.substring(0, length) + '...' : name
-          const val = params.data?.nodeValue
-          return val ? `${truncated}\n${val}` : truncated
+          return name.length > length ? name.substring(0, length) + '...' : name
         },
       },
       nodeGap: 4,
@@ -505,6 +503,53 @@ const options = computed(() => ({
   ],
 }))
 
+// Overlays metric values as text inside each Sankey node rectangle using ECharts graphic elements.
+// Node positions are read from ECharts' internal layout after setOption completes.
+const updateNodeValueGraphics = (chartInstance: echarts.ECharts) => {
+  const nodes = sankeyData.value.nodes
+  if (nodes.length === 0) {
+    chartInstance.setOption({ graphic: [] }, { replaceMerge: ['graphic'] } as Parameters<
+      typeof chartInstance.setOption
+    >[1])
+    return
+  }
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data = (chartInstance as any).getModel().getSeriesByIndex(0).getData()
+    const elements: object[] = []
+    nodes.forEach((node, idx) => {
+      if (!node.nodeValue) return
+      const layout = data.getItemLayout(idx) as
+        | { x: number; y: number; width: number; height: number }
+        | undefined
+      if (!layout) return
+      const { x, y, width, height } = layout
+      if (height < 14) return
+      elements.push({
+        type: 'text',
+        x: x + width / 2,
+        y: y + height / 2,
+        rotation: -Math.PI / 2,
+        style: {
+          text: node.nodeValue,
+          fill: 'rgba(255,255,255,0.9)',
+          fontSize: 9,
+          fontWeight: 'bold',
+          align: 'center',
+          verticalAlign: 'middle',
+        },
+        silent: true,
+        z: 200,
+      })
+    })
+    chartInstance.setOption({ graphic: elements }, { replaceMerge: ['graphic'] } as Parameters<
+      typeof chartInstance.setOption
+    >[1])
+  } catch {
+    // internal API unavailable
+  }
+}
+
 onMounted(() => {
   updateColorSet()
   updateFontFamily()
@@ -515,8 +560,7 @@ onMounted(() => {
   const myChart = echarts.init(chart.value)
 
   myChart.setOption(options.value)
-
-  // 监听 tooltip 显示和隐藏事件
+  updateNodeValueGraphics(myChart)
   myChart.on('showTip', () => {
     isPaused.value = true
   })
@@ -531,6 +575,7 @@ onMounted(() => {
 
     if (myChart && newData.nodes.length > 0) {
       myChart.setOption(options.value)
+      updateNodeValueGraphics(myChart)
     } else if (myChart && newData.nodes.length === 0) {
       myChart.clear()
     }
@@ -549,6 +594,7 @@ onMounted(() => {
         }
         if (fullScreenMyChart.value && newData.nodes.length > 0) {
           fullScreenMyChart.value.setOption(options.value)
+          updateNodeValueGraphics(fullScreenMyChart.value)
         } else if (fullScreenMyChart.value && newData.nodes.length === 0) {
           fullScreenMyChart.value.clear()
         }
@@ -561,9 +607,11 @@ onMounted(() => {
   watch([theme, font], () => {
     if (myChart) {
       myChart.setOption(options.value)
+      updateNodeValueGraphics(myChart)
     }
     if (fullScreenMyChart.value) {
       fullScreenMyChart.value.setOption(options.value)
+      updateNodeValueGraphics(fullScreenMyChart.value)
     }
   })
 
@@ -582,6 +630,7 @@ onMounted(() => {
         }
         if (fullScreenMyChart.value && sankeyData.value.nodes.length > 0) {
           fullScreenMyChart.value.setOption(options.value)
+          updateNodeValueGraphics(fullScreenMyChart.value)
         }
       })
     } else {
@@ -593,7 +642,9 @@ onMounted(() => {
   const { width } = useElementSize(chart)
   const resize = debounce(() => {
     myChart.resize()
+    updateNodeValueGraphics(myChart)
     fullScreenMyChart.value?.resize()
+    if (fullScreenMyChart.value) updateNodeValueGraphics(fullScreenMyChart.value)
   }, 100)
 
   watch(width, resize)
