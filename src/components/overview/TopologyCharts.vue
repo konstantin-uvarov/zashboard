@@ -33,7 +33,8 @@
       </div>
     </div>
     <div
-      :class="twMerge('relative h-144 w-full overflow-hidden pt-12')"
+      :class="twMerge('relative w-full overflow-hidden pt-12')"
+      style="height: 576px"
       @mousemove.stop
       @touchmove.stop
     >
