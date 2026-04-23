@@ -46,25 +46,27 @@ const updateFontFamily = () => {
 const labelFormatter = (value: number) =>
   `${prettyBytesHelper(value, { maximumFractionDigits: 0, binary: false })}/s`
 
+const PALETTE = [
+  '#5470c6',
+  '#91cc75',
+  '#fac858',
+  '#ee6666',
+  '#73c0de',
+  '#3ba272',
+  '#fc8452',
+  '#9a60b4',
+  '#ea7ccc',
+  '#45b7d1',
+  '#96ceb4',
+  '#ffad60',
+  '#ff6b6b',
+  '#c3a6ff',
+  '#a8e063',
+  '#56ccf2',
+]
+
 const buildOptions = () => ({
-  color: [
-    '#5470c6',
-    '#91cc75',
-    '#fac858',
-    '#ee6666',
-    '#73c0de',
-    '#3ba272',
-    '#fc8452',
-    '#9a60b4',
-    '#ea7ccc',
-    '#45b7d1',
-    '#96ceb4',
-    '#ffad60',
-    '#ff6b6b',
-    '#c3a6ff',
-    '#a8e063',
-    '#56ccf2',
-  ],
+  color: PALETTE,
   legend: {
     bottom: 0,
     type: 'scroll',
@@ -80,14 +82,14 @@ const buildOptions = () => ({
     confine: true,
     padding: [0, 5],
     textStyle: { color: colorSet.baseContent, fontFamily },
-    formatter: (params: { seriesName: string; value: [number, number]; color: string }[]) =>
+    formatter: (params: ToolTipParams[]) =>
       params
-        .filter((p) => p.value[1] > 0)
+        .filter((p) => p.data.value > 0)
         .map(
           (p) =>
             `<div style="display:flex;align-items:center;gap:4px;padding:1px 0">` +
             `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${p.color}"></span>` +
-            `${p.seriesName}: ${prettyBytesHelper(p.value[1], { binary: false, maximumFractionDigits: 1 })}/s` +
+            `${p.seriesName}: ${prettyBytesHelper(p.data.value, { binary: false, maximumFractionDigits: 1 })}/s` +
             `</div>`,
         )
         .join('') || '—',
@@ -117,15 +119,24 @@ const buildOptions = () => ({
       fontFamily,
     },
   },
-  series: deviceAllSeries.value.map((s) => ({
-    name: s.name,
-    type: 'line',
-    symbol: 'none',
-    smooth: true,
-    lineStyle: { width: 1.5 },
-    emphasis: { disabled: true },
-    data: s.data,
-  })),
+  series: deviceAllSeries.value.map((s, i) => {
+    const c = PALETTE[i % PALETTE.length]
+    return {
+      name: s.name,
+      type: 'line',
+      symbol: 'none',
+      smooth: true,
+      lineStyle: { width: 1, color: c },
+      emphasis: { disabled: true },
+      data: s.data,
+      areaStyle: {
+        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+          { offset: 0, color: c + 'cc' },
+          { offset: 1, color: c + '1a' },
+        ]),
+      },
+    }
+  }),
 })
 
 let myChart: echarts.ECharts | null = null
