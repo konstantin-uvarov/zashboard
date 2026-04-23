@@ -176,7 +176,7 @@ const buildOptions = () => {
   }))
 
   return {
-    grid: { left: 120, right: 16, top: 8, bottom: 28, containLabel: false },
+    grid: { left: 300, right: 16, top: 8, bottom: 28, containLabel: false },
     tooltip: {
       trigger: 'axis',
       axisPointer: { type: 'shadow' },
