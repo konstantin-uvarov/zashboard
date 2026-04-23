@@ -14,6 +14,9 @@ interface SpeedPoint {
 const deviceDownloadHistory = ref<Map<string, SpeedPoint[]>>(new Map())
 const deviceUploadHistory = ref<Map<string, SpeedPoint[]>>(new Map())
 
+// Grow-only set: once an IP enters the legend it never leaves
+const stableDeviceIPs = ref<Set<string>>(new Set())
+
 const initValue = () => new Array(timeSaved).fill(0).map((_, i) => ({ name: i, value: 0 }))
 
 watch(
@@ -32,10 +35,15 @@ watch(
       uploadByIP.set(ip, (uploadByIP.get(ip) ?? 0) + (conn.uploadSpeed ?? 0))
     }
 
-    // Update histories for all known IPs (including those with 0 speed now)
-    const allKnownIPs = new Set([...deviceDownloadHistory.value.keys(), ...downloadByIP.keys()])
+    // Add new IPs to the stable set (grow-only, capped at MAX_DEVICES)
+    for (const ip of downloadByIP.keys()) {
+      if (!stableDeviceIPs.value.has(ip) && stableDeviceIPs.value.size < MAX_DEVICES) {
+        stableDeviceIPs.value.add(ip)
+      }
+    }
 
-    for (const ip of allKnownIPs) {
+    // Update histories for all stable IPs (push 0 for inactive ones)
+    for (const ip of stableDeviceIPs.value) {
       if (!deviceDownloadHistory.value.has(ip)) {
         deviceDownloadHistory.value.set(ip, initValue())
         deviceUploadHistory.value.set(ip, initValue())
@@ -55,31 +63,15 @@ watch(
     }
 
     // Trigger reactivity
+    stableDeviceIPs.value = new Set(stableDeviceIPs.value)
     deviceDownloadHistory.value = new Map(deviceDownloadHistory.value)
     deviceUploadHistory.value = new Map(deviceUploadHistory.value)
   },
   { deep: false },
 )
 
-// Pick top N devices by recent average combined speed
-const topDeviceIPs = computed(() => {
-  const scored: { ip: string; score: number }[] = []
-
-  for (const [ip, history] of deviceDownloadHistory.value.entries()) {
-    const dlHistory = history.slice(-10)
-    const ulHistory = deviceUploadHistory.value.get(ip)?.slice(-10) ?? []
-    const avgDl = dlHistory.reduce((s, p) => s + p.value, 0) / (dlHistory.length || 1)
-    const avgUl = ulHistory.reduce((s, p) => s + p.value, 0) / (ulHistory.length || 1)
-    scored.push({ ip, score: avgDl + avgUl })
-  }
-
-  const topIPs = scored
-    .sort((a, b) => b.score - a.score)
-    .slice(0, MAX_DEVICES)
-    .map((s) => s.ip)
-
-  // Sort selected IPs numerically so legend order never changes with speed
-  topIPs.sort((a, b) => {
+const sortIPsNumerically = (ips: string[]) =>
+  [...ips].sort((a, b) => {
     const partsA = a.split('.').map(Number)
     const partsB = b.split('.').map(Number)
     for (let i = 0; i < 4; i++) {
@@ -89,18 +81,18 @@ const topDeviceIPs = computed(() => {
     return 0
   })
 
-  return topIPs
-})
+// Stable sorted list of device IPs — order and membership never change once set
+const stableSortedIPs = computed(() => sortIPsNumerically([...stableDeviceIPs.value]))
 
 export const deviceDownloadSeries = computed(() => {
-  return topDeviceIPs.value.map((ip) => ({
+  return stableSortedIPs.value.map((ip) => ({
     name: `↓ ${getIPLabelFromMap(ip)}`,
     data: deviceDownloadHistory.value.get(ip) ?? initValue(),
   }))
 })
 
 export const deviceUploadSeries = computed(() => {
-  return topDeviceIPs.value.map((ip) => ({
+  return stableSortedIPs.value.map((ip) => ({
     name: `↑ ${getIPLabelFromMap(ip)}`,
     data: deviceUploadHistory.value.get(ip) ?? initValue(),
   }))
