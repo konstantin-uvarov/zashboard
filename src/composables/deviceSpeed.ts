@@ -3,7 +3,7 @@ import { activeConnections } from '@/store/connections'
 import { timeSaved } from '@/store/overview'
 import { computed, ref, watch } from 'vue'
 
-const MAX_DEVICES = 8
+const MAX_DEVICES = 20
 
 interface SpeedPoint {
   name: number
