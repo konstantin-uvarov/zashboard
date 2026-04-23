@@ -521,14 +521,22 @@ const updateNodeValueGraphics = (chartInstance: echarts.ECharts) => {
       dataIndex: number
       getLayout: () => { x: number; y: number; dx: number; dy: number } | undefined
     }>
+    console.debug('[topology] layoutInfo:', layoutInfo, 'graphNodes count:', graphNodes.length, 'data nodes count:', nodes.length)
     const elements: object[] = []
     nodes.forEach((_node, idx) => {
       if (!_node.nodeValue) return
       const graphNode = graphNodes.find((n) => n.dataIndex === idx)
-      if (!graphNode) return
+      if (!graphNode) {
+        console.debug('[topology] no graphNode for idx', idx)
+        return
+      }
       const layout = graphNode.getLayout()
-      if (!layout) return
+      if (!layout) {
+        console.debug('[topology] no layout for idx', idx)
+        return
+      }
       const { x, y, dx, dy } = layout
+      console.debug(`[topology] node[${idx}] "${_node.name}" value="${_node.nodeValue}" x=${x} y=${y} dx=${dx} dy=${dy} → canvas(${layoutInfo.x + x + dx / 2}, ${layoutInfo.y + y + dy / 2})`)
       if (dy < 14) return
       elements.push({
         id: `node-val-${idx}`,
@@ -548,9 +556,10 @@ const updateNodeValueGraphics = (chartInstance: echarts.ECharts) => {
         z: 200,
       })
     })
+    console.debug('[topology] setting', elements.length, 'graphic elements')
     chartInstance.setOption({ graphic: elements })
-  } catch {
-    // internal API unavailable — values simply won't overlay
+  } catch (e) {
+    console.error('[topology] updateNodeValueGraphics error:', e)
   }
 }
 
