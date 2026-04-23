@@ -176,7 +176,7 @@ const buildOptions = () => {
   }))
 
   return {
-    grid: { left: 300, right: 16, top: 8, bottom: 28, containLabel: false },
+    grid: { left: 8, right: 16, top: 8, bottom: 28, containLabel: true },
     tooltip: {
       trigger: 'axis',
       axisPointer: { type: 'shadow' },
@@ -208,7 +208,7 @@ const buildOptions = () => {
       axisLabel: {
         color: colorSet.baseContent,
         fontFamily,
-        width: 110,
+        width: 240,
         overflow: 'truncate',
       },
       axisTick: { show: false },
