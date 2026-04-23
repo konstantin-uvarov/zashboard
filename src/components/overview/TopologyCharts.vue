@@ -188,7 +188,7 @@ const updateFontFamily = () => {
 const sankeyData = computed(() => {
   let connections
   if (timeRange.value === 'all') {
-    connections = activeConnections.value
+    connections = [...closedConnections.value, ...activeConnections.value]
   } else {
     const rangeMs = getTimeRangeMs(timeRange.value)
     connections = filterConnectionsByTimeRange(
