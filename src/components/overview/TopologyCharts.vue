@@ -59,7 +59,12 @@
       >
         <span
           class="text-[9px] font-bold text-white/90 select-none"
-          style="transform: rotate(-90deg); white-space: nowrap"
+          style="
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            white-space: nowrap;
+            line-height: 1;
+          "
           >{{ overlay.text }}</span
         >
       </div>
@@ -121,7 +126,12 @@
       >
         <span
           class="text-[9px] font-bold text-white/90 select-none"
-          style="transform: rotate(-90deg); white-space: nowrap"
+          style="
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            white-space: nowrap;
+            line-height: 1;
+          "
           >{{ overlay.text }}</span
         >
       </div>
@@ -580,10 +590,10 @@ const computeNodeOverlays = (
       if (dy < 14) return
       overlays.push({
         id: `node-val-${idx}`,
-        x: offsetLeft + layoutInfo.x + x,
-        y: offsetTop + layoutInfo.y + y,
-        w: dx,
-        h: dy,
+        x: Math.round(offsetLeft + layoutInfo.x + x),
+        y: Math.round(offsetTop + layoutInfo.y + y),
+        w: Math.round(dx),
+        h: Math.round(dy),
         text: _node.nodeValue,
       })
     })
