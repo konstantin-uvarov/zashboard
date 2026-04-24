@@ -612,10 +612,18 @@ const options = computed(() => {
             ? prettyBytesHelper(displayValue, { binary: false })
             : String(Math.round(displayValue))
           const metricLabel = t(metric.value === 'count' ? 'connectionCount' : metric.value)
-          if (sourceNode && targetNode) {
-            return `${sourceNode.name} → ${targetNode.name}<br/>${metricLabel}: ${formattedValue}`
+          const findComment = (node: (typeof sankeyData.value.nodes)[0] | undefined) => {
+            if (!node || node.nodeType !== ruleMatchLabel) return undefined
+            return commentMatchers.find(
+              (m) => node.name.startsWith(m.type + '=') && node.name.includes(m.firstValue),
+            )?.comment
           }
-          return `${metricLabel}: ${formattedValue}`
+          const comment = findComment(sourceNode) ?? findComment(targetNode)
+          const lines: string[] = []
+          if (comment) lines.push(`<b>${comment}</b>`)
+          if (sourceNode && targetNode) lines.push(`${sourceNode.name} → ${targetNode.name}`)
+          lines.push(`${metricLabel}: ${formattedValue}`)
+          return lines.join('<br/>')
         }
         return ''
       },
