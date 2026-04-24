@@ -152,6 +152,12 @@ onMounted(() => {
   if (chartEl.value) {
     myChart = echarts.init(chartEl.value)
     myChart.setOption(buildOptions())
+    myChart.on('showTip', () => {
+      isPaused.value = true
+    })
+    myChart.on('hideTip', () => {
+      isPaused.value = false
+    })
   }
 
   watch(

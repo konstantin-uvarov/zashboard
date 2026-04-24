@@ -88,6 +88,7 @@ const CHART_MARGIN = 50
 
 const chartEl = ref<HTMLElement | null>(null)
 const colorRef = ref<HTMLElement | null>(null)
+const isPaused = ref(false)
 const timeRange = useLocalStorage<TimeRangeValue>('stats-geoip-timerange', 'all')
 
 const colorSet = { baseContent: '', base70: '' }
@@ -249,9 +250,16 @@ onMounted(() => {
   if (chartEl.value) {
     myChart = echarts.init(chartEl.value)
     myChart.setOption(buildOptions())
+    myChart.on('showTip', () => {
+      isPaused.value = true
+    })
+    myChart.on('hideTip', () => {
+      isPaused.value = false
+    })
   }
 
   watch(chartData, async () => {
+    if (isPaused.value) return
     await nextTick()
     myChart?.setOption(buildOptions(), true)
     myChart?.resize()
