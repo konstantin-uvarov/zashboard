@@ -583,6 +583,11 @@ const options = computed(() => {
           originalValue?: number
         }
       }) => {
+        const boldNodeTypes = new Set([
+          t('sourceIPAddress'),
+          t('proxyChainEntry'),
+          t('proxyChainExit'),
+        ])
         if (params.dataType === 'node') {
           const lines: string[] = []
           if (params.data.nodeType === ruleMatchLabel) {
@@ -593,10 +598,10 @@ const options = computed(() => {
             )
             if (match) lines.push(`<b>${match.comment}</b>`)
           }
-          lines.push(
-            `${params.data.name}`,
-            `${t('nodeType')}: ${params.data.nodeType || t('unknown')}`,
-          )
+          const nameLine = boldNodeTypes.has(params.data.nodeType ?? '')
+            ? `<b>${params.data.name}</b>`
+            : params.data.name
+          lines.push(nameLine, `${t('nodeType')}: ${params.data.nodeType || t('unknown')}`)
           if (params.data.nodeValue)
             lines.push(
               `${t(metric.value === 'count' ? 'connectionCount' : metric.value)}: ${params.data.nodeValue}`,
@@ -627,7 +632,17 @@ const options = computed(() => {
 
           // Non-rule edges: show flow direction + metric
           const lines: string[] = []
-          if (sourceNode && targetNode) lines.push(`${sourceNode.name} → ${targetNode.name}`)
+          if (sourceNode && targetNode) {
+            const boldNode = [sourceNode, targetNode].find((n) =>
+              boldNodeTypes.has(n.nodeType ?? ''),
+            )
+            if (boldNode) {
+              lines.push(`<b>${boldNode.name}</b>`)
+              lines.push(`${t('nodeType')}: ${boldNode.nodeType}`)
+            } else {
+              lines.push(`${sourceNode.name} → ${targetNode.name}`)
+            }
+          }
           lines.push(`${metricLabel}: ${formattedValue}`)
           return lines.join('<br/>')
         }
