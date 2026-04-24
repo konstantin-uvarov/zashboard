@@ -485,8 +485,10 @@ const sankeyData = computed(() => {
   const rawLinkValues = Array.from(linkMap.values())
   const maxRaw = rawLinkValues.length > 0 ? Math.max(...rawLinkValues) : 1
 
+  const minVisible = Math.sqrt(maxRaw + 1) * 0.02
+
   const scaleLink = (value: number): number => {
-    if (scaleMode.value === 'sqrt') return Math.sqrt(value + 1)
+    if (scaleMode.value === 'sqrt') return Math.max(minVisible, Math.sqrt(value + 1))
     if (scaleMode.value === 'linear') return Math.max(maxRaw * 0.02, value)
     return Math.log10(value + 1) * 10
   }
