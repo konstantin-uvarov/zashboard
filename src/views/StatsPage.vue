@@ -9,8 +9,8 @@
         <DeviceSpeedCharts />
       </div>
     </div>
-    <TrafficPieChart />
     <ConnectionHistory />
+    <TrafficPieChart />
     <TopologyCharts />
     <RuleHitCountCard />
   </div>
