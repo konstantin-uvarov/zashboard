@@ -66,6 +66,12 @@
         ref="colorRef"
       />
     </div>
+    <div
+      v-if="isChartCapped"
+      class="text-base-content/50 px-4 pb-2 text-xs"
+    >
+      {{ $t('showingTopItems', { count: props.maxItems, total: allChartData.length }) }}
+    </div>
   </div>
 </template>
 
@@ -112,12 +118,14 @@ const props = withDefaults(
     groupBy?: ConnectionHistoryType
     hideSmallValues?: boolean
     hideControls?: boolean
+    maxItems?: number
   }>(),
   {
     timeRange: undefined,
     groupBy: undefined,
     hideSmallValues: false,
     hideControls: false,
+    maxItems: undefined,
   },
 )
 
@@ -157,7 +165,7 @@ const updateFontFamily = () => {
   fontFamily = getComputedStyle(colorRef.value).fontFamily
 }
 
-const chartData = computed(() => {
+const allChartData = computed(() => {
   let entries
   if (activeTimeRange.value === 'all') {
     entries = aggregatedDataMap.value[activeGroupBy.value] ?? []
@@ -187,6 +195,14 @@ const chartData = computed(() => {
       return { label, download: entry.download, upload: entry.upload, color }
     })
 })
+
+const chartData = computed(() =>
+  props.maxItems !== undefined ? allChartData.value.slice(0, props.maxItems) : allChartData.value,
+)
+
+const isChartCapped = computed(
+  () => props.maxItems !== undefined && allChartData.value.length > props.maxItems,
+)
 
 const chartHeight = computed(() =>
   Math.max(120, chartData.value.length * BAR_HEIGHT + CHART_MARGIN),

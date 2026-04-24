@@ -307,6 +307,7 @@ const ru: LANG_MESSAGE = {
   autoCleanupIntervalNever: 'Никогда',
   hideSmallValues: 'Скрыть < 10 МБ',
   detailedBreakdown: 'Подробная разбивка',
+  showingTopItems: 'Показано топ {count} из {total}',
   remainingTraffic: 'Осталось',
   usedTraffic: 'Использовано',
   ruleHitCount: 'Попадание: {count} раз',

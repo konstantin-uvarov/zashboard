@@ -304,6 +304,7 @@ const en = {
   autoCleanupIntervalNever: 'Never',
   hideSmallValues: 'Hide < 10 MB',
   detailedBreakdown: 'Detailed breakdown',
+  showingTopItems: 'Showing top {count} of {total}',
   remainingTraffic: 'Remaining',
   usedTraffic: 'Used',
   ruleHitCount: 'Hit: {count} times',

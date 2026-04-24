@@ -301,6 +301,7 @@ const zhTW: LANG_MESSAGE = {
   autoCleanupIntervalNever: '永不',
   hideSmallValues: '隱藏 < 10 MB',
   detailedBreakdown: '詳細分類',
+  showingTopItems: '顯示前 {count} / 共 {total}',
   remainingTraffic: '剩餘流量',
   usedTraffic: '已使用',
   ruleHitCount: '命中: {count} 次',

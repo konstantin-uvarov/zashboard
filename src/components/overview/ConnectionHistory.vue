@@ -116,6 +116,7 @@
       :group-by="aggregationType"
       :hide-small-values="hideSmallValues"
       :hide-controls="true"
+      :max-items="50"
     />
 
     <button
@@ -183,6 +184,12 @@
           </tr>
         </tbody>
       </table>
+      <div
+        v-if="isTableCapped"
+        class="text-base-content/50 px-4 pt-1 pb-3 text-xs"
+      >
+        {{ $t('showingTopItems', { count: DISPLAY_CAP, total: filteredAggregatedData.length }) }}
+      </div>
     </div>
 
     <DialogWrapper
@@ -300,10 +307,17 @@ const aggregatedData = computed<ConnectionHistoryData[]>(() => {
   return aggregateConnections(filtered, aggregationType.value)
 })
 
+const DISPLAY_CAP = 50
+
 const filteredAggregatedData = computed<ConnectionHistoryData[]>(() => {
-  if (!hideSmallValues.value) return aggregatedData.value
-  return aggregatedData.value.filter((item) => item.download + item.upload >= SMALL_VALUE_THRESHOLD)
+  const base = hideSmallValues.value
+    ? aggregatedData.value.filter((item) => item.download + item.upload >= SMALL_VALUE_THRESHOLD)
+    : aggregatedData.value
+  return [...base].sort((a, b) => b.download + b.upload - (a.download + a.upload))
 })
+
+const tableData = computed(() => filteredAggregatedData.value.slice(0, DISPLAY_CAP))
+const isTableCapped = computed(() => filteredAggregatedData.value.length > DISPLAY_CAP)
 
 const totalStats = computed(() => {
   return aggregatedData.value.reduce(
@@ -317,7 +331,7 @@ const totalStats = computed(() => {
   )
 })
 
-const aggregateSourceCount = computed(() => filteredAggregatedData.value.length)
+const aggregateSourceCount = computed(() => tableData.value.length)
 
 const aggregateSourceLabel = computed(() => {
   if (aggregationType.value === ConnectionHistoryType.SourceIP) {
@@ -402,7 +416,7 @@ const sorting = useStorage<SortingState>('cache/connection-history-sorting', [
 
 const tanstackTable = useVueTable({
   get data() {
-    return filteredAggregatedData.value
+    return tableData.value
   },
   get columns() {
     return columns.value
@@ -490,7 +504,7 @@ const checkAndPerformAutoCleanup = async () => {
 const handleClearHistory = async () => {
   try {
     await clearConnectionHistoryFromIndexedDB()
-    await initAggregatedDataMap()
+    initAggregatedDataMap()
     showClearDialog.value = false
     showNotification({
       content: t('clearConnectionHistorySuccess'),
