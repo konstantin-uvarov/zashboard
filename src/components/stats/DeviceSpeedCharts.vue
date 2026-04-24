@@ -1,5 +1,5 @@
 <template>
-  <div class="relative h-64 w-full overflow-hidden">
+  <div class="bg-base-200/30 relative h-64 w-full overflow-hidden rounded-xl">
     <div
       ref="chartEl"
       class="h-full w-full"

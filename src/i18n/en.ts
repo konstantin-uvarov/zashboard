@@ -364,7 +364,7 @@ const en = {
 
   // Stats page
   stats: 'Stats',
-  deviceSpeedChart: 'Device Speed (Real-time)',
+  deviceSpeedChart: 'Device Speed',
   trafficPieChart: 'Traffic Distribution',
   timeRange: 'Time range',
   allData: 'All data',

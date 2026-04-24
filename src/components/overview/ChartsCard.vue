@@ -9,6 +9,10 @@
         @mouseenter="showTip($event, $t('overviewStatsTip'))"
       />
     </div>
+    <StatisticsStats
+      type="overview"
+      class="mb-3"
+    />
     <!-- Surge-style stat cards -->
     <div class="grid grid-cols-2 gap-3 lg:grid-cols-3">
       <!-- Upload Speed -->
@@ -82,6 +86,7 @@
 
 <script setup lang="ts">
 import MiniSparkline from '@/components/overview/MiniSparkline.vue'
+import StatisticsStats from '@/components/overview/StatisticsStats.vue'
 import { getToolTipForParams } from '@/helper'
 import { useTooltip } from '@/helper/tooltip'
 import { prettyBytesHelper } from '@/helper/utils'

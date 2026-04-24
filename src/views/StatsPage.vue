@@ -2,10 +2,12 @@
   <div class="flex w-full flex-col gap-2 p-2">
     <ChartsCard />
     <div class="card w-full">
-      <div class="card-title px-4 pt-4">
-        {{ $t('deviceSpeedChart') }}
+      <div class="px-4 pt-4 pb-2">
+        <span class="text-base-content/60 text-xs font-semibold tracking-wider uppercase">
+          {{ $t('deviceSpeedChart') }}
+        </span>
       </div>
-      <div class="card-body">
+      <div class="card-body pt-0">
         <DeviceSpeedCharts />
       </div>
     </div>

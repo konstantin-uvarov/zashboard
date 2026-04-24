@@ -1,8 +1,10 @@
 <template>
   <div class="card pb-4">
-    <div class="card-title absolute z-10 flex w-full items-center justify-between px-4 pt-4">
+    <div class="absolute z-10 flex w-full items-center justify-between px-4 pt-4">
       <div class="flex items-center gap-2">
-        {{ $t('connectionTopology') }}
+        <span class="text-base-content/60 text-xs font-semibold tracking-wider uppercase">
+          {{ $t('connectionTopology') }}
+        </span>
         <QuestionMarkCircleIcon
           class="h-4 w-4 cursor-pointer font-normal"
           @mouseenter="showTip($event, chartTip)"

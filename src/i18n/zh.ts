@@ -351,7 +351,7 @@ const zh: LANG_MESSAGE = {
   restartBackendFailed: '后端重启失败',
   overviewStatsTip: '自核心上次重启以来的累计流量。API 不提供重启时间。',
   stats: '统计',
-  deviceSpeedChart: '设备速度（实时）',
+  deviceSpeedChart: '设备速度',
   trafficPieChart: '流量分布',
   timeRange: '时间范围',
   allData: '全部数据',
