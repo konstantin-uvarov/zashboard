@@ -2,9 +2,13 @@ import { getProcessFromConnection } from '@/helper'
 import {
   ConnectionHistoryType,
   getConnectionHistoryFromIndexedDB,
+  getConnectionHistoryStartTime,
   getTopoFlowsFromIndexedDB,
+  getTopoStartTime,
+  saveConnectionHistoryStartTime,
   saveConnectionHistoryToIndexedDB,
   saveTopoFlowsToIndexedDB,
+  saveTopoStartTime,
   type ConnectionHistoryData,
   type TopoFlowData,
 } from '@/helper/indexeddb'
@@ -26,6 +30,9 @@ const allHistoryTypes = [
   ConnectionHistoryType.Outbound,
 ]
 
+export const historyStartTime = ref<number | null>(null)
+export const topoHistoryStartTime = ref<number | null>(null)
+
 export const aggregatedDataMap = ref<Record<ConnectionHistoryType, ConnectionHistoryData[]>>({
   [ConnectionHistoryType.SourceIP]: [],
   [ConnectionHistoryType.Destination]: [],
@@ -43,6 +50,7 @@ export const initAggregatedDataMap = () => {
     [ConnectionHistoryType.Outbound]: [],
   }
   isInitializedPromise.value = new Promise(async (resolve) => {
+    let hasData = false
     for (const type of allHistoryTypes) {
       const historicalData = await getConnectionHistoryFromIndexedDB(uuid(), type)
 
@@ -53,14 +61,39 @@ export const initAggregatedDataMap = () => {
       }
 
       aggregatedDataMap.value[type] = finalData
+      if (finalData.length > 0) hasData = true
     }
+
+    const storedStartTime = await getConnectionHistoryStartTime(uuid())
+    if (!hasData) {
+      const now = Date.now()
+      historyStartTime.value = now
+      await saveConnectionHistoryStartTime(uuid(), now)
+    } else if (storedStartTime !== null) {
+      historyStartTime.value = storedStartTime
+    } else {
+      historyStartTime.value = null // legacy data — start time not recorded
+    }
+
     resolve(true)
   })
 }
 
 export const initTopoFlowsData = async () => {
   topoFlowsData.value = []
-  topoFlowsData.value = await getTopoFlowsFromIndexedDB(uuid())
+  const flows = await getTopoFlowsFromIndexedDB(uuid())
+  topoFlowsData.value = flows
+
+  const storedStartTime = await getTopoStartTime(uuid())
+  if (flows.length === 0) {
+    const now = Date.now()
+    topoHistoryStartTime.value = now
+    await saveTopoStartTime(uuid(), now)
+  } else if (storedStartTime !== null) {
+    topoHistoryStartTime.value = storedStartTime
+  } else {
+    topoHistoryStartTime.value = null // legacy data — start time not recorded
+  }
 }
 
 export const aggregateTopoFlows = (connections: Connection[]): TopoFlowData[] => {
