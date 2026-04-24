@@ -317,8 +317,14 @@ const en = {
   connectionTopologyTip: 'Connection routing through rules and proxies.\n{note}',
   chartTipAllHistory:
     'Persistent all-time data (stored across sessions).\nData collected since: {time}',
+  chartTipAllHistoryUnknown:
+    'Persistent all-time data (stored across sessions).\nData collection start time is not recorded (legacy data).',
   chartTipTimeLimited:
     'In-memory data only — last 500 closed connections + active.\nOldest entry: {time}',
+  clearTopologyHistory: 'Clear topology history',
+  clearTopologyHistoryConfirm:
+    'Are you sure you want to clear all topology data? This action cannot be undone.',
+  clearTopologyHistorySuccess: 'Topology data cleared successfully',
 }
 
 export type LANG_MESSAGE = typeof en

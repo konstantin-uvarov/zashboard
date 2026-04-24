@@ -313,7 +313,11 @@ const zh: LANG_MESSAGE = {
   trafficDistributionTip: '按所选键分组的流量分布。\n{note}',
   connectionTopologyTip: '通过规则和代理的连接路由。\n{note}',
   chartTipAllHistory: '持久全时段数据（跨会话存储）。\n数据收集自: {time}',
+  chartTipAllHistoryUnknown: '持久全时段数据（跨会话存储）。\n数据收集开始时间未记录（旧版数据）。',
   chartTipTimeLimited: '仅内存数据——最近500条已关闭连接+活跃连接。\n最早条目: {time}',
+  clearTopologyHistory: '清空拓扑历史',
+  clearTopologyHistoryConfirm: '确定要清空所有拓扑数据吗？此操作不可恢复。',
+  clearTopologyHistorySuccess: '拓扑数据清空成功',
 }
 
 export default zh

@@ -313,7 +313,11 @@ const zhTW: LANG_MESSAGE = {
   trafficDistributionTip: '按所選鍵分組的流量分佈。\n{note}',
   connectionTopologyTip: '通過規則和代理的連接路由。\n{note}',
   chartTipAllHistory: '持久全時段數據（跨會話存儲）。\n數據收集自: {time}',
+  chartTipAllHistoryUnknown: '持久全時段數據（跨會話存儲）。\n數據收集開始時間未記錄（舊版數據）。',
   chartTipTimeLimited: '僅內存數據——最近500條已關閉連接+活躍連接。\n最早條目: {time}',
+  clearTopologyHistory: '清空拓撲歷史',
+  clearTopologyHistoryConfirm: '確定要清空所有拓撲數據嗎？此操作不可恢復。',
+  clearTopologyHistorySuccess: '拓撲數據清空成功',
 }
 
 export default zhTW
