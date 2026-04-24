@@ -321,6 +321,9 @@ const zh: LANG_MESSAGE = {
   clearTopologyHistory: '清空拓扑历史',
   clearTopologyHistoryConfirm: '确定要清空所有拓扑数据吗？此操作不可恢复。',
   clearTopologyHistorySuccess: '拓扑数据清空成功',
+  scaleModeLog: '对数刻度',
+  scaleModeSqrt: '平方根刻度',
+  scaleModeLinear: '线性刻度',
 }
 
 export default zh

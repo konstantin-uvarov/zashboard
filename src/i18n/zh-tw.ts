@@ -321,6 +321,9 @@ const zhTW: LANG_MESSAGE = {
   clearTopologyHistory: '清空拓撲歷史',
   clearTopologyHistoryConfirm: '確定要清空所有拓撲數據嗎？此操作不可恢復。',
   clearTopologyHistorySuccess: '拓撲數據清空成功',
+  scaleModeLog: '對數刻度',
+  scaleModeSqrt: '平方根刻度',
+  scaleModeLinear: '線性刻度',
 }
 
 export default zhTW

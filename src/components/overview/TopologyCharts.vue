@@ -36,6 +36,14 @@
             {{ opt.value === 'all' ? $t('allData') : opt.labelKey }}
           </option>
         </select>
+        <select
+          v-model="scaleMode"
+          class="select select-sm font-normal"
+        >
+          <option value="log">{{ $t('scaleModeLog') }}</option>
+          <option value="sqrt">{{ $t('scaleModeSqrt') }}</option>
+          <option value="linear">{{ $t('scaleModeLinear') }}</option>
+        </select>
       </div>
     </div>
     <div
@@ -266,6 +274,7 @@ const metric = useLocalStorage<'download' | 'upload' | 'total' | 'count'>(
   'stats-topology-metric',
   'download',
 )
+const scaleMode = useLocalStorage<'log' | 'sqrt' | 'linear'>('stats-topology-scale', 'log')
 
 const shouldRotate = computed(() => {
   return isFullScreen.value && isMiddleScreen.value && windowHeight.value > windowWidth.value
@@ -473,19 +482,24 @@ const sankeyData = computed(() => {
     })
   })
 
-  // 更新 links 中的 source 和 target 引用
+  const rawLinkValues = Array.from(linkMap.values())
+  const maxRaw = rawLinkValues.length > 0 ? Math.max(...rawLinkValues) : 1
+
+  const scaleLink = (value: number): number => {
+    if (scaleMode.value === 'sqrt') return Math.sqrt(value + 1)
+    if (scaleMode.value === 'linear') return Math.max(maxRaw * 0.02, value)
+    return Math.log10(value + 1) * 10
+  }
+
   const links = Array.from(linkMap.entries()).map(([link, value]) => {
     const [oldSource, oldTarget] = link.split('-').map(Number)
     const source = idMapping.get(oldSource)!
     const target = idMapping.get(oldTarget)!
-    // 使用对数缩放来压缩数据范围，使小值更明显
-    // 公式: log10(value + 1) * 10，确保最小值为0，同时保持相对大小关系
-    const scaledValue = Math.log10(value + 1) * 10
     return {
       source,
       target,
-      value: scaledValue,
-      originalValue: value, // 保存原始值用于 tooltip 显示
+      value: scaleLink(value),
+      originalValue: value,
     }
   })
 

@@ -330,6 +330,9 @@ const ru: LANG_MESSAGE = {
   clearTopologyHistoryConfirm:
     'Вы уверены, что хотите очистить все данные топологии? Это действие нельзя отменить.',
   clearTopologyHistorySuccess: 'Данные топологии успешно очищены',
+  scaleModeLog: 'Логарифмическая',
+  scaleModeSqrt: 'Корень квадратный',
+  scaleModeLinear: 'Линейная',
 }
 
 export default ru

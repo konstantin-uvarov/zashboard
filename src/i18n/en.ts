@@ -327,6 +327,9 @@ const en = {
   clearTopologyHistoryConfirm:
     'Are you sure you want to clear all topology data? This action cannot be undone.',
   clearTopologyHistorySuccess: 'Topology data cleared successfully',
+  scaleModeLog: 'Log scale',
+  scaleModeSqrt: 'Sqrt scale',
+  scaleModeLinear: 'Linear scale',
 }
 
 export type LANG_MESSAGE = typeof en
