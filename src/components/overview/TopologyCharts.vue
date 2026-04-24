@@ -40,9 +40,9 @@
           v-model="scaleMode"
           class="select select-sm font-normal"
         >
-          <option value="log">{{ $t('scaleModeLog') }}</option>
-          <option value="sqrt">{{ $t('scaleModeSqrt') }}</option>
           <option value="linear">{{ $t('scaleModeLinear') }}</option>
+          <option value="sqrt">{{ $t('scaleModeSqrt') }}</option>
+          <option value="log">{{ $t('scaleModeLog') }}</option>
         </select>
       </div>
     </div>
@@ -274,7 +274,7 @@ const metric = useLocalStorage<'download' | 'upload' | 'total' | 'count'>(
   'stats-topology-metric',
   'download',
 )
-const scaleMode = useLocalStorage<'log' | 'sqrt' | 'linear'>('stats-topology-scale', 'log')
+const scaleMode = useLocalStorage<'log' | 'sqrt' | 'linear'>('stats-topology-scale', 'linear')
 
 const shouldRotate = computed(() => {
   return isFullScreen.value && isMiddleScreen.value && windowHeight.value > windowWidth.value
@@ -485,12 +485,13 @@ const sankeyData = computed(() => {
   const rawLinkValues = Array.from(linkMap.values())
   const maxRaw = rawLinkValues.length > 0 ? Math.max(...rawLinkValues) : 1
 
-  const minVisible = Math.sqrt(maxRaw + 1) * 0.02
+  const minSqrt = Math.sqrt(maxRaw + 1) * 0.1
+  const minLinear = maxRaw * 0.1
 
   const scaleLink = (value: number): number => {
-    if (scaleMode.value === 'sqrt') return Math.max(minVisible, Math.sqrt(value + 1))
-    if (scaleMode.value === 'linear') return Math.max(maxRaw * 0.02, value)
-    return Math.log10(value + 1) * 10
+    if (scaleMode.value === 'sqrt') return Math.max(minSqrt, Math.sqrt(value + 1))
+    if (scaleMode.value === 'log') return Math.log10(value + 1) * 10
+    return Math.max(minLinear, value)
   }
 
   const links = Array.from(linkMap.entries()).map(([link, value]) => {
@@ -771,6 +772,15 @@ onMounted(() => {
   }, 300)
 
   watch(sankeyData, updateChartData, { deep: true })
+
+  watch(scaleMode, () => {
+    myChart.setOption(options.value)
+    nextTick(() => updateNodeValueGraphics(myChart))
+    if (fullScreenMyChart.value) {
+      fullScreenMyChart.value.setOption(options.value)
+      nextTick(() => updateFullScreenNodeValueGraphics(fullScreenMyChart.value!))
+    }
+  })
 
   watch([theme, font], () => {
     if (myChart) {
