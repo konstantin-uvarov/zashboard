@@ -302,6 +302,8 @@ const en = {
   autoCleanupIntervalMonth: 'Monthly',
   autoCleanupIntervalQuarter: 'Quarterly',
   autoCleanupIntervalNever: 'Never',
+  hideSmallValues: 'Hide < 10 MB',
+  detailedBreakdown: 'Detailed breakdown',
   remainingTraffic: 'Remaining',
   usedTraffic: 'Used',
   ruleHitCount: 'Hit: {count} times',

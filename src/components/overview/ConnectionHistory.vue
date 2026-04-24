@@ -1,5 +1,5 @@
 <template>
-  <div class="card w-full pb-4 backdrop-blur-none!">
+  <div class="card w-full backdrop-blur-none!">
     <div class="card-title need-blur flex items-center justify-between px-4 pt-4">
       <div class="flex w-full items-center gap-4 max-sm:flex-col max-sm:items-start">
         <div class="flex flex-1 items-center gap-2">
@@ -18,6 +18,14 @@
         </div>
 
         <div class="flex items-center gap-2 font-normal max-sm:flex-col max-sm:items-start">
+          <label class="flex cursor-pointer items-center gap-2">
+            <span class="text-sm">{{ $t('hideSmallValues') }}</span>
+            <input
+              type="checkbox"
+              class="toggle toggle-sm"
+              v-model="hideSmallValues"
+            />
+          </label>
           <div class="flex items-center gap-2">
             <span class="text-sm">{{ $t('timeRange') }}</span>
             <select
@@ -103,12 +111,33 @@
         </div>
       </div>
     </div>
+    <TrafficPieChart
+      :time-range="timeRange"
+      :group-by="aggregationType"
+      :hide-small-values="hideSmallValues"
+      :hide-controls="true"
+    />
+
+    <button
+      class="flex w-full cursor-pointer items-center gap-1 px-4 pb-4 text-left text-sm opacity-60 hover:opacity-100"
+      @click="tableCollapsed = !tableCollapsed"
+    >
+      <ChevronRightIcon
+        class="h-3.5 w-3.5 shrink-0 transition-transform"
+        :class="{ 'rotate-90': !tableCollapsed }"
+      />
+      <span class="font-medium underline decoration-dotted underline-offset-4">{{
+        $t('detailedBreakdown')
+      }}</span>
+      <TableCellsIcon class="h-3.5 w-3.5 shrink-0" />
+    </button>
     <div
+      v-show="!tableCollapsed"
       @touchstart.passive.stop
       @touchmove.passive.stop
       @touchend.passive.stop
     >
-      <table class="table-sm table-zebra table w-full rounded-none">
+      <table class="table-sm table-zebra mb-4 table w-full rounded-none">
         <thead class="bg-base-200 sticky top-0 z-10">
           <tr>
             <th
@@ -155,6 +184,7 @@
         </tbody>
       </table>
     </div>
+
     <DialogWrapper
       v-model="showClearDialog"
       :title="$t('clearConnectionHistory')"
@@ -207,7 +237,9 @@ import { activeConnections, closedConnections } from '@/store/connections'
 import {
   ArrowDownCircleIcon,
   ArrowUpCircleIcon,
+  ChevronRightIcon,
   QuestionMarkCircleIcon,
+  TableCellsIcon,
   TrashIcon,
 } from '@heroicons/vue/24/outline'
 import {
@@ -225,9 +257,12 @@ import { computed, h, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import DialogWrapper from '../common/DialogWrapper.vue'
 import ProxyName from '../proxies/ProxyName.vue'
+import TrafficPieChart from '../stats/TrafficPieChart.vue'
 
 const { t } = useI18n()
 const { showTip } = useTooltip()
+
+const SMALL_VALUE_THRESHOLD = 10 * 1024 * 1024
 
 enum AutoCleanupInterval {
   Never = 'never',
@@ -248,6 +283,8 @@ const aggregationType = useStorage<ConnectionHistoryType>(
   ConnectionHistoryType.SourceIP,
 )
 const timeRange = useStorage<TimeRangeValue>('stats-history-timerange', 'all')
+const hideSmallValues = useStorage<boolean>('cache/connection-history-hide-small', true)
+const tableCollapsed = useStorage<boolean>('cache/connection-history-table-collapsed', true)
 
 const aggregatedData = computed<ConnectionHistoryData[]>(() => {
   if (timeRange.value === 'all') {
@@ -263,6 +300,11 @@ const aggregatedData = computed<ConnectionHistoryData[]>(() => {
   return aggregateConnections(filtered, aggregationType.value)
 })
 
+const filteredAggregatedData = computed<ConnectionHistoryData[]>(() => {
+  if (!hideSmallValues.value) return aggregatedData.value
+  return aggregatedData.value.filter((item) => item.download + item.upload >= SMALL_VALUE_THRESHOLD)
+})
+
 const totalStats = computed(() => {
   return aggregatedData.value.reduce(
     (acc, item) => {
@@ -275,7 +317,7 @@ const totalStats = computed(() => {
   )
 })
 
-const aggregateSourceCount = computed(() => aggregatedData.value.length)
+const aggregateSourceCount = computed(() => filteredAggregatedData.value.length)
 
 const aggregateSourceLabel = computed(() => {
   if (aggregationType.value === ConnectionHistoryType.SourceIP) {
@@ -360,7 +402,7 @@ const sorting = useStorage<SortingState>('cache/connection-history-sorting', [
 
 const tanstackTable = useVueTable({
   get data() {
-    return aggregatedData.value
+    return filteredAggregatedData.value
   },
   get columns() {
     return columns.value
@@ -438,7 +480,7 @@ const checkAndPerformAutoCleanup = async () => {
   if (timeSinceLastCleanup >= intervalMs) {
     try {
       await clearConnectionHistoryFromIndexedDB()
-      await initAggregatedDataMap()
+      initAggregatedDataMap()
     } catch (error) {
       console.error('Failed to perform auto cleanup:', error)
     }

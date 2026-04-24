@@ -305,6 +305,8 @@ const ru: LANG_MESSAGE = {
   autoCleanupIntervalMonth: 'Ежемесячно',
   autoCleanupIntervalQuarter: 'Ежеквартально',
   autoCleanupIntervalNever: 'Никогда',
+  hideSmallValues: 'Скрыть < 10 МБ',
+  detailedBreakdown: 'Подробная разбивка',
   remainingTraffic: 'Осталось',
   usedTraffic: 'Использовано',
   ruleHitCount: 'Попадание: {count} раз',

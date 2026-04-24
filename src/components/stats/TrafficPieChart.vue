@@ -1,6 +1,9 @@
 <template>
-  <div class="card">
-    <div class="card-title flex flex-wrap items-center justify-between gap-2 px-4 pt-4">
+  <div :class="hideControls ? '' : 'card'">
+    <div
+      v-if="!hideControls"
+      class="card-title flex flex-wrap items-center justify-between gap-2 px-4 pt-4"
+    >
       <div class="flex items-center gap-2">
         <span>{{ $t('trafficPieChart') }}</span>
         <QuestionMarkCircleIcon
@@ -12,7 +15,7 @@
         <div class="flex items-center gap-2">
           <span class="text-sm">{{ $t('timeRange') }}</span>
           <select
-            v-model="timeRange"
+            v-model="internalTimeRange"
             class="select select-sm"
           >
             <option
@@ -27,7 +30,7 @@
         <div class="flex items-center gap-2">
           <span class="text-sm">{{ $t('aggregateBy') }}</span>
           <select
-            v-model="groupBy"
+            v-model="internalGroupBy"
             class="select select-sm"
           >
             <option :value="ConnectionHistoryType.SourceIP">{{ $t('aggregateBySourceIP') }}</option>
@@ -40,7 +43,13 @@
         </div>
       </div>
     </div>
-    <div class="card-body relative p-2!">
+    <div
+      v-else
+      class="mt-4 mb-0 px-4"
+    >
+      <span class="text-sm font-bold">{{ $t('trafficPieChart') }}</span>
+    </div>
+    <div class="relative p-2!">
       <div
         ref="chartEl"
         :style="{ height: chartHeight + 'px' }"
@@ -97,19 +106,38 @@ import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
 
+const props = withDefaults(
+  defineProps<{
+    timeRange?: TimeRangeValue
+    groupBy?: ConnectionHistoryType
+    hideSmallValues?: boolean
+    hideControls?: boolean
+  }>(),
+  {
+    timeRange: undefined,
+    groupBy: undefined,
+    hideSmallValues: false,
+    hideControls: false,
+  },
+)
+
 const { t } = useI18n()
 const { showTip } = useTooltip()
 const BAR_HEIGHT = 28
 const CHART_MARGIN = 50
+const SMALL_VALUE_THRESHOLD = 10 * 1024 * 1024
 
 const chartEl = ref<HTMLElement | null>(null)
 const colorRef = ref<HTMLElement | null>(null)
 const isPaused = ref(false)
-const groupBy = useLocalStorage<ConnectionHistoryType>(
+const internalGroupBy = useLocalStorage<ConnectionHistoryType>(
   'stats-pie-groupby',
   ConnectionHistoryType.SourceIP,
 )
-const timeRange = useLocalStorage<TimeRangeValue>('stats-pie-timerange', 'all')
+const internalTimeRange = useLocalStorage<TimeRangeValue>('stats-pie-timerange', 'all')
+
+const activeTimeRange = computed(() => props.timeRange ?? internalTimeRange.value)
+const activeGroupBy = computed(() => props.groupBy ?? internalGroupBy.value)
 
 const colorSet = {
   baseContent: '',
@@ -131,27 +159,33 @@ const updateFontFamily = () => {
 
 const chartData = computed(() => {
   let entries
-  if (timeRange.value === 'all') {
-    entries = aggregatedDataMap.value[groupBy.value] ?? []
+  if (activeTimeRange.value === 'all') {
+    entries = aggregatedDataMap.value[activeGroupBy.value] ?? []
   } else {
-    const rangeMs = getTimeRangeMs(timeRange.value)
+    const rangeMs = getTimeRangeMs(activeTimeRange.value)
     const filtered = filterConnectionsByTimeRange(
       [...closedConnections.value, ...activeConnections.value],
       rangeMs,
     )
-    const live = aggregateConnections(filtered, groupBy.value)
+    const live = aggregateConnections(filtered, activeGroupBy.value)
     entries = mergeAggregatedData([], live)
   }
   return [...entries]
     .sort((a, b) => b.download + b.upload - (a.download + a.upload))
+    .filter((entry) => {
+      if (props.hideSmallValues && entry.download + entry.upload < SMALL_VALUE_THRESHOLD)
+        return false
+      return entry.download > 0 || entry.upload > 0
+    })
     .map((entry) => {
       const label =
-        groupBy.value === ConnectionHistoryType.SourceIP ? getIPDisplayLabel(entry.key) : entry.key
+        activeGroupBy.value === ConnectionHistoryType.SourceIP
+          ? getIPDisplayLabel(entry.key)
+          : entry.key
       const color =
-        groupBy.value === ConnectionHistoryType.SourceIP ? getIPColor(entry.key) : undefined
+        activeGroupBy.value === ConnectionHistoryType.SourceIP ? getIPColor(entry.key) : undefined
       return { label, download: entry.download, upload: entry.upload, color }
     })
-    .filter((d) => d.download > 0 || d.upload > 0)
 })
 
 const chartHeight = computed(() =>
@@ -159,7 +193,7 @@ const chartHeight = computed(() =>
 )
 
 const chartTip = computed(() => {
-  if (timeRange.value === 'all') {
+  if (activeTimeRange.value === 'all') {
     const note =
       historyStartTime.value !== null
         ? t('chartTipAllHistory', {
@@ -168,7 +202,7 @@ const chartTip = computed(() => {
         : t('chartTipAllHistoryUnknown')
     return t('trafficDistributionTip', { note })
   }
-  const rangeMs = getTimeRangeMs(timeRange.value)
+  const rangeMs = getTimeRangeMs(activeTimeRange.value)
   const filtered = filterConnectionsByTimeRange(
     [...closedConnections.value, ...activeConnections.value],
     rangeMs,

@@ -10,7 +10,6 @@
       </div>
     </div>
     <ConnectionHistory />
-    <TrafficPieChart />
     <TopologyCharts />
     <RuleHitCountCard />
   </div>
@@ -22,5 +21,4 @@ import ConnectionHistory from '@/components/overview/ConnectionHistory.vue'
 import RuleHitCountCard from '@/components/overview/RuleHitCountCard.vue'
 import TopologyCharts from '@/components/overview/TopologyCharts.vue'
 import DeviceSpeedCharts from '@/components/stats/DeviceSpeedCharts.vue'
-import TrafficPieChart from '@/components/stats/TrafficPieChart.vue'
 </script>

@@ -299,6 +299,8 @@ const zh: LANG_MESSAGE = {
   autoCleanupIntervalMonth: '每月',
   autoCleanupIntervalQuarter: '每季度',
   autoCleanupIntervalNever: '永不',
+  hideSmallValues: '隐藏 < 10 MB',
+  detailedBreakdown: '详细分类',
   remainingTraffic: '剩余流量',
   usedTraffic: '已使用',
   ruleHitCount: '命中: {count} 次',
