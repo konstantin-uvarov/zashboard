@@ -14,36 +14,45 @@
           <TrashIcon class="h-4 w-4" />
         </button>
       </div>
-      <div class="flex items-center gap-2">
-        <select
-          v-model="metric"
-          class="select select-sm font-normal"
-        >
-          <option value="download">{{ $t('download') }}</option>
-          <option value="upload">{{ $t('upload') }}</option>
-          <option value="total">{{ $t('total') }}</option>
-          <option value="count">{{ $t('connectionCount') }}</option>
-        </select>
-        <select
-          v-model="timeRange"
-          class="select select-sm font-normal"
-        >
-          <option
-            v-for="opt in TIME_RANGE_OPTIONS"
-            :key="opt.value"
-            :value="opt.value"
+      <div class="flex items-center gap-2 font-normal">
+        <div class="flex items-center gap-2">
+          <span class="text-sm">{{ $t('metric') }}</span>
+          <select
+            v-model="metric"
+            class="select select-sm"
           >
-            {{ opt.value === 'all' ? $t('allData') : opt.labelKey }}
-          </option>
-        </select>
-        <select
-          v-model="scaleMode"
-          class="select select-sm font-normal"
-        >
-          <option value="linear">{{ $t('scaleModeLinear') }}</option>
-          <option value="sqrt">{{ $t('scaleModeSqrt') }}</option>
-          <option value="log">{{ $t('scaleModeLog') }}</option>
-        </select>
+            <option value="download">{{ $t('download') }}</option>
+            <option value="upload">{{ $t('upload') }}</option>
+            <option value="total">{{ $t('total') }}</option>
+            <option value="count">{{ $t('connectionCount') }}</option>
+          </select>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-sm">{{ $t('timeRange') }}</span>
+          <select
+            v-model="timeRange"
+            class="select select-sm"
+          >
+            <option
+              v-for="opt in TIME_RANGE_OPTIONS"
+              :key="opt.value"
+              :value="opt.value"
+            >
+              {{ opt.value === 'all' ? $t('allData') : opt.labelKey }}
+            </option>
+          </select>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-sm">{{ $t('scale') }}</span>
+          <select
+            v-model="scaleMode"
+            class="select select-sm"
+          >
+            <option value="linear">{{ $t('scaleModeLinear') }}</option>
+            <option value="sqrt">{{ $t('scaleModeSqrt') }}</option>
+            <option value="log">{{ $t('scaleModeLog') }}</option>
+          </select>
+        </div>
       </div>
     </div>
     <div

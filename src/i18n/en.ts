@@ -330,6 +330,8 @@ const en = {
   scaleModeLog: 'Log scale',
   scaleModeSqrt: 'Sqrt scale',
   scaleModeLinear: 'Linear scale',
+  metric: 'Metric',
+  scale: 'Scale',
 }
 
 export type LANG_MESSAGE = typeof en

@@ -9,29 +9,35 @@
         />
       </div>
       <div class="flex items-center gap-2 font-normal">
-        <select
-          v-model="timeRange"
-          class="select select-sm"
-        >
-          <option
-            v-for="opt in TIME_RANGE_OPTIONS"
-            :key="opt.value"
-            :value="opt.value"
+        <div class="flex items-center gap-2">
+          <span class="text-sm">{{ $t('timeRange') }}</span>
+          <select
+            v-model="timeRange"
+            class="select select-sm"
           >
-            {{ opt.value === 'all' ? $t('allData') : opt.labelKey }}
-          </option>
-        </select>
-        <select
-          v-model="groupBy"
-          class="select select-sm"
-        >
-          <option :value="ConnectionHistoryType.SourceIP">{{ $t('aggregateBySourceIP') }}</option>
-          <option :value="ConnectionHistoryType.Outbound">{{ $t('aggregateByOutbound') }}</option>
-          <option :value="ConnectionHistoryType.Destination">
-            {{ $t('aggregateByDestination') }}
-          </option>
-          <option :value="ConnectionHistoryType.Process">{{ $t('aggregateByProcess') }}</option>
-        </select>
+            <option
+              v-for="opt in TIME_RANGE_OPTIONS"
+              :key="opt.value"
+              :value="opt.value"
+            >
+              {{ opt.value === 'all' ? $t('allData') : opt.labelKey }}
+            </option>
+          </select>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-sm">{{ $t('aggregateBy') }}</span>
+          <select
+            v-model="groupBy"
+            class="select select-sm"
+          >
+            <option :value="ConnectionHistoryType.SourceIP">{{ $t('aggregateBySourceIP') }}</option>
+            <option :value="ConnectionHistoryType.Outbound">{{ $t('aggregateByOutbound') }}</option>
+            <option :value="ConnectionHistoryType.Destination">
+              {{ $t('aggregateByDestination') }}
+            </option>
+            <option :value="ConnectionHistoryType.Process">{{ $t('aggregateByProcess') }}</option>
+          </select>
+        </div>
       </div>
     </div>
     <div class="card-body relative p-2!">

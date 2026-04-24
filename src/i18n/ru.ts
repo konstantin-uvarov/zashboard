@@ -333,6 +333,8 @@ const ru: LANG_MESSAGE = {
   scaleModeLog: 'Логарифмическая',
   scaleModeSqrt: 'Корень квадратный',
   scaleModeLinear: 'Линейная',
+  metric: 'Метрика',
+  scale: 'Масштаб',
 }
 
 export default ru

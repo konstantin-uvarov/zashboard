@@ -324,6 +324,8 @@ const zh: LANG_MESSAGE = {
   scaleModeLog: '对数刻度',
   scaleModeSqrt: '平方根刻度',
   scaleModeLinear: '线性刻度',
+  metric: '指标',
+  scale: '缩放',
 }
 
 export default zh

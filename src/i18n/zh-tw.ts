@@ -324,6 +324,8 @@ const zhTW: LANG_MESSAGE = {
   scaleModeLog: '對數刻度',
   scaleModeSqrt: '平方根刻度',
   scaleModeLinear: '線性刻度',
+  metric: '指標',
+  scale: '縮放',
 }
 
 export default zhTW
