@@ -605,22 +605,28 @@ const options = computed(() => {
         } else if (params.dataType === 'edge') {
           const sourceNode = sankeyData.value.nodes.find((n) => n.id === params.data.source)
           const targetNode = sankeyData.value.nodes.find((n) => n.id === params.data.target)
-          // 使用原始值显示真实的连接数量
           const displayValue = params.data.originalValue ?? params.data.value
           const isBytes = metric.value !== 'count'
           const formattedValue = isBytes
             ? prettyBytesHelper(displayValue, { binary: false })
             : String(Math.round(displayValue))
           const metricLabel = t(metric.value === 'count' ? 'connectionCount' : metric.value)
-          const findComment = (node: (typeof sankeyData.value.nodes)[0] | undefined) => {
-            if (!node || node.nodeType !== ruleMatchLabel) return undefined
-            return commentMatchers.find(
-              (m) => node.name.startsWith(m.type + '=') && node.name.includes(m.firstValue),
+
+          // If the edge touches a rule node, show same structure as the node tooltip
+          const ruleNode = [sourceNode, targetNode].find((n) => n?.nodeType === ruleMatchLabel)
+          if (ruleNode) {
+            const lines: string[] = []
+            const comment = commentMatchers.find(
+              (m) => ruleNode.name.startsWith(m.type + '=') && ruleNode.name.includes(m.firstValue),
             )?.comment
+            if (comment) lines.push(`<b>${comment}</b>`)
+            lines.push(ruleNode.name, `${t('nodeType')}: ${ruleNode.nodeType}`)
+            lines.push(`${metricLabel}: ${formattedValue}`)
+            return lines.join('<br/>')
           }
-          const comment = findComment(sourceNode) ?? findComment(targetNode)
+
+          // Non-rule edges: show flow direction + metric
           const lines: string[] = []
-          if (comment) lines.push(`<b>${comment}</b>`)
           if (sourceNode && targetNode) lines.push(`${sourceNode.name} → ${targetNode.name}`)
           lines.push(`${metricLabel}: ${formattedValue}`)
           return lines.join('<br/>')
