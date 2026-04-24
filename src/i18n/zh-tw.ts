@@ -150,7 +150,7 @@ const zhTW: LANG_MESSAGE = {
   ipScreenshotTip: '截圖時請確保隱藏IP',
   showStatisticsWhenSidebarCollapsed: '側邊欄摺疊時顯示統計',
   totalConnections: '連接統計',
-  totalConnectionsTip: '只能統計面板開啟期間的連接。\n記錄開始時間：{statsStartTime}',
+  totalConnectionsTip: '持久全時段數據（跨會話存儲）。\n數據收集自: {statsStartTime}',
   mostDownloadHost: '最多下載主機',
   mostUploadHost: '最多上傳主機',
   mostDownloadSourceIP: '最多下載源IP',

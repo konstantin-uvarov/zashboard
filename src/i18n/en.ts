@@ -150,7 +150,7 @@ const en = {
   showStatisticsWhenSidebarCollapsed: 'Show statistics when sidebar collapsed',
   totalConnections: 'Connection statistics',
   totalConnectionsTip:
-    'Only connections opened while the panel is open are counted. \nRecording start time: {statsStartTime}',
+    'Persistent all-time data (stored across sessions).\nData collected since: {statsStartTime}',
   mostDownloadHost: 'Most downloaded host',
   mostUploadHost: 'Most uploaded host',
   mostDownloadSourceIP: 'Most downloaded source IP',

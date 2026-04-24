@@ -152,7 +152,7 @@ const ru: LANG_MESSAGE = {
   showStatisticsWhenSidebarCollapsed: 'Показать статистику при сворачивании панели',
   totalConnections: 'Статистика соединений',
   totalConnectionsTip:
-    'Учитываются только соединения, открытые во время работы панели. \nВремя начала записи: {statsStartTime}',
+    'Постоянные данные за всё время (сохраняются между сессиями).\nДанные собираются с: {statsStartTime}',
   mostDownloadHost: 'Ресурс с наибольшим скачиванием',
   mostUploadHost: 'Ресурс с наибольшей отправкой данных',
   mostDownloadSourceIP: 'IP-источник с наибольшим скачиванием',

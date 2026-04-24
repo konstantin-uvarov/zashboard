@@ -150,7 +150,7 @@ const zh: LANG_MESSAGE = {
   ipScreenshotTip: '截图时请确保隐藏IP',
   showStatisticsWhenSidebarCollapsed: '侧边栏折叠时显示统计',
   totalConnections: '连接统计',
-  totalConnectionsTip: '只能统计面板打开期间的连接。\n记录开始时间：{statsStartTime}',
+  totalConnectionsTip: '持久全时段数据（跨会话存储）。\n数据收集自: {statsStartTime}',
   mostDownloadHost: '最多下载主机',
   mostUploadHost: '最多上传主机',
   mostDownloadSourceIP: '最多下载源IP',
