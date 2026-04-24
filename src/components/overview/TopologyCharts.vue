@@ -58,7 +58,7 @@
       </div>
     </div>
     <div
-      :class="twMerge('relative w-full overflow-hidden pt-12')"
+      :class="twMerge('bg-base-200/30 relative w-full overflow-hidden rounded-xl pt-12')"
       style="height: 576px"
       @mousemove.stop
       @touchmove.stop

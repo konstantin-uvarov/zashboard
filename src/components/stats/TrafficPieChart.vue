@@ -49,7 +49,7 @@
     >
       <span class="text-sm font-bold">{{ $t('trafficPieChart') }}</span>
     </div>
-    <div class="relative p-2!">
+    <div class="bg-base-200/30 relative rounded-xl p-2!">
       <div
         ref="chartEl"
         :style="{ height: chartHeight + 'px' }"
