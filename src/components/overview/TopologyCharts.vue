@@ -88,10 +88,7 @@
       >
         <button
           class="btn btn-ghost btn-circle btn-sm"
-          @click="
-            isPaused = !isPaused
-            isDragPaused = false
-          "
+          @click="togglePause()"
         >
           <component
             :is="!isPaused ? PauseCircleIcon : PlayCircleIcon"
@@ -147,10 +144,7 @@
       <div class="fixed right-4 bottom-4 mb-[env(safe-area-inset-bottom)] flex flex-col gap-1">
         <button
           class="btn btn-ghost btn-circle btn-sm"
-          @click="
-            isPaused = !isPaused
-            isDragPaused = false
-          "
+          @click="togglePause()"
         >
           <component
             :is="!isPaused ? PauseCircleIcon : PlayCircleIcon"
@@ -238,6 +232,10 @@ const isFullScreen = ref(false)
 const showClearDialog = ref(false)
 const isPaused = ref(false)
 const isDragPaused = ref(false)
+const togglePause = () => {
+  isPaused.value = !isPaused.value
+  isDragPaused.value = false
+}
 const colorRef = ref()
 
 // Build matchers from CGI rules payload format: "type: val1, val2 (+N more)"
