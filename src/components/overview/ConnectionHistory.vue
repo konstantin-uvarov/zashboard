@@ -391,11 +391,12 @@ const autoCleanupInterval = useStorage<AutoCleanupInterval>(
   AutoCleanupInterval.Month,
 )
 const totalConnectionsTip = computed(() => {
-  const statsStartTime =
+  const baseTip =
     historyStartTime.value !== null
-      ? `${dayjs(historyStartTime.value).format('YYYY-MM-DD HH:mm')} (${dayjs(historyStartTime.value).fromNow()})`
-      : t('unknown')
-  const baseTip = t('totalConnectionsTip', { statsStartTime })
+      ? t('totalConnectionsTip', {
+          statsStartTime: `${dayjs(historyStartTime.value).format('YYYY-MM-DD HH:mm')} (${dayjs(historyStartTime.value).fromNow()})`,
+        })
+      : t('chartTipAllHistoryUnknown')
   if (timeRange.value === 'all') return baseTip
   const rangeMs = getTimeRangeMs(timeRange.value)
   const filtered = filterConnectionsByTimeRange(
