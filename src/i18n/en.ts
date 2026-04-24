@@ -148,6 +148,8 @@ const en = {
   sniffHost: 'Sniff host',
   ipScreenshotTip: 'Please hide the IP when taking screenshots.',
   showStatisticsWhenSidebarCollapsed: 'Show statistics when sidebar collapsed',
+  overviewStatsTip:
+    'Cumulative totals since the last core restart. Restart time is not exposed by the API.',
   totalConnections: 'Connection statistics',
   totalConnectionsTip:
     'Persistent all-time data (only recorded while the panel is open; stored across sessions).\nData collected since: {statsStartTime}',

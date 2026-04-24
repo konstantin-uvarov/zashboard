@@ -149,6 +149,7 @@ const zhTW: LANG_MESSAGE = {
   sniffHost: '嗅探主機',
   ipScreenshotTip: '截圖時請確保隱藏IP',
   showStatisticsWhenSidebarCollapsed: '側邊欄摺疊時顯示統計',
+  overviewStatsTip: '自核心上次重啟以來的累計流量。API 不提供重啟時間。',
   totalConnections: '連接統計',
   totalConnectionsTip:
     '持久歷史數據（僅在面板開啟時記錄；跨會話存儲）。\n數據收集自: {statsStartTime}',
