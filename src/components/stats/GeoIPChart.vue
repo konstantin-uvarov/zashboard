@@ -127,7 +127,7 @@ const chartData = computed(() => {
       upload: entry.upload,
       count: entry.count,
     }))
-    .filter((d) => d.download > 0 || d.upload > 0)
+    .filter((d) => (d.download > 0 || d.upload > 0) && d.label !== 'Unknown')
 })
 
 const chartHeight = computed(() =>
