@@ -326,8 +326,6 @@ const zhTW: LANG_MESSAGE = {
   scaleModeLinear: '線性刻度',
   metric: '指標',
   scale: '縮放',
-  protocolBreakdown: '協議分佈',
-  geoIPChart: 'GeoIP 分佈',
 }
 
 export default zhTW

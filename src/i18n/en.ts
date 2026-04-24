@@ -332,8 +332,6 @@ const en = {
   scaleModeLinear: 'Linear scale',
   metric: 'Metric',
   scale: 'Scale',
-  protocolBreakdown: 'Protocol Breakdown',
-  geoIPChart: 'GeoIP Distribution',
 }
 
 export type LANG_MESSAGE = typeof en

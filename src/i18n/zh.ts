@@ -326,8 +326,6 @@ const zh: LANG_MESSAGE = {
   scaleModeLinear: '线性刻度',
   metric: '指标',
   scale: '缩放',
-  protocolBreakdown: '协议分布',
-  geoIPChart: 'GeoIP 分布',
 }
 
 export default zh
