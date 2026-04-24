@@ -75,7 +75,7 @@
 </template>
 
 <script setup lang="ts">
-import { isBackendAvailable } from '@/api'
+import { isBackendAvailable, isSingBox } from '@/api'
 import DialogWrapper from '@/components/common/DialogWrapper.vue'
 import SideBar from '@/components/sidebar/SideBar.vue'
 import { dockTop } from '@/composables/paddingViews'
@@ -129,6 +129,12 @@ watch(
     immediate: true,
   },
 )
+
+// fetchRules() above runs before fetchVersionAPI() resolves, so isSingBox is still false
+// and the CGI path (which provides rule comments) is skipped. Re-fetch once isSingBox is known.
+watch(isSingBox, (val, old) => {
+  if (val && !old) fetchRules()
+})
 
 const autoSwitchBackendDialog = ref(false)
 

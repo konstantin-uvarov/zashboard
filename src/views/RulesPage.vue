@@ -17,7 +17,7 @@
         <template v-else>
           <RuleCard
             v-for="rule in renderRules"
-            :key="rule.payload"
+            :key="rule.uuid || String(rule.index)"
             :rule="rule"
             :index="rules.indexOf(rule) + 1"
           />
@@ -34,7 +34,7 @@
       </template>
       <template v-slot="{ item: rule }: { item: Rule }">
         <RuleCard
-          :key="rule.payload"
+          :key="rule.uuid || String(rule.index)"
           :rule="rule"
           :index="rules.indexOf(rule) + 1"
         />

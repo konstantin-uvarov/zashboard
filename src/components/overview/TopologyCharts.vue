@@ -88,7 +88,10 @@
       >
         <button
           class="btn btn-ghost btn-circle btn-sm"
-          @click="isPaused = !isPaused"
+          @click="
+            isPaused = !isPaused
+            isDragPaused = false
+          "
         >
           <component
             :is="!isPaused ? PauseCircleIcon : PlayCircleIcon"
@@ -144,7 +147,10 @@
       <div class="fixed right-4 bottom-4 mb-[env(safe-area-inset-bottom)] flex flex-col gap-1">
         <button
           class="btn btn-ghost btn-circle btn-sm"
-          @click="isPaused = !isPaused"
+          @click="
+            isPaused = !isPaused
+            isDragPaused = false
+          "
         >
           <component
             :is="!isPaused ? PauseCircleIcon : PlayCircleIcon"
@@ -200,6 +206,7 @@ import { useTooltip } from '@/helper/tooltip'
 import { isMiddleScreen, prettyBytesHelper } from '@/helper/utils'
 import { activeConnections, closedConnections } from '@/store/connections'
 import { initTopoFlowsData, topoFlowsData, topoHistoryStartTime } from '@/store/connHistory'
+import { rules } from '@/store/rules'
 import { blurIntensity, dashboardTransparent, font, theme } from '@/store/settings'
 import {
   ArrowsPointingInIcon,
@@ -230,7 +237,28 @@ const { showTip } = useTooltip()
 const isFullScreen = ref(false)
 const showClearDialog = ref(false)
 const isPaused = ref(false)
+const isDragPaused = ref(false)
 const colorRef = ref()
+
+// Build matchers from CGI rules payload format: "type: val1, val2 (+N more)"
+// Used to find rule comments for topology node tooltips.
+const ruleCommentMatchers = computed(() =>
+  rules.value
+    .filter((r) => r.comment)
+    .map((r) => {
+      const colonIdx = r.payload.indexOf(': ')
+      if (colonIdx === -1) return null
+      const type = r.payload.substring(0, colonIdx).trim()
+      const firstValue = r.payload
+        .substring(colonIdx + 2)
+        .split(',')[0]
+        .trim()
+        .replace(/ \(\+\d+ more\)$/, '')
+        .trim()
+      return { type, firstValue, comment: r.comment! }
+    })
+    .filter((m): m is { type: string; firstValue: string; comment: string } => m !== null),
+)
 const chart = ref()
 const fullScreenChart = ref()
 const fullScreenMyChart = ref<echarts.ECharts>()
@@ -501,96 +529,110 @@ const chartTip = computed(() => {
 
 const layerColors = ['#6a6fc5', '#a8d4a0', '#fddb8a', '#f2a0a0']
 
-const options = computed(() => ({
-  backgroundColor: 'transparent',
-  textStyle: {
-    fontFamily: fontFamily || 'inherit',
-    color: colorSet.baseContent,
-  },
-  tooltip: {
-    trigger: 'item',
-    triggerOn: 'mousemove',
-    backgroundColor: colorSet.base70,
-    borderColor: colorSet.baseContent30,
+const options = computed(() => {
+  const commentMatchers = ruleCommentMatchers.value
+  const ruleMatchLabel = t('ruleMatch')
+
+  return {
+    backgroundColor: 'transparent',
     textStyle: {
+      fontFamily: fontFamily || 'inherit',
       color: colorSet.baseContent,
     },
-    formatter: (params: {
-      dataType: string
-      data: {
-        name: string
-        nodeType?: string
-        nodeValue?: string
-        source: number
-        target: number
-        value: number
-        originalValue?: number
-      }
-    }) => {
-      if (params.dataType === 'node') {
-        const lines = [
-          `${params.data.name}`,
-          `${t('nodeType')}: ${params.data.nodeType || t('unknown')}`,
-        ]
-        if (params.data.nodeValue)
-          lines.push(
-            `${t(metric.value === 'count' ? 'connectionCount' : metric.value)}: ${params.data.nodeValue}`,
-          )
-        return lines.join('<br/>')
-      } else if (params.dataType === 'edge') {
-        const sourceNode = sankeyData.value.nodes.find((n) => n.id === params.data.source)
-        const targetNode = sankeyData.value.nodes.find((n) => n.id === params.data.target)
-        // 使用原始值显示真实的连接数量
-        const displayValue = params.data.originalValue ?? params.data.value
-        const isBytes = metric.value !== 'count'
-        const formattedValue = isBytes
-          ? prettyBytesHelper(displayValue, { binary: false })
-          : String(Math.round(displayValue))
-        const metricLabel = t(metric.value === 'count' ? 'connectionCount' : metric.value)
-        if (sourceNode && targetNode) {
-          return `${sourceNode.name} → ${targetNode.name}<br/>${metricLabel}: ${formattedValue}`
-        }
-        return `${metricLabel}: ${formattedValue}`
-      }
-      return ''
-    },
-  },
-  series: [
-    {
-      id: 'sankey',
-      type: 'sankey',
-      layout: 'none',
-      data: sankeyData.value.nodes,
-      links: sankeyData.value.links,
-      emphasis: {
-        focus: 'trajectory',
-      },
-      lineStyle: {
-        color: 'gradient',
-        curveness: 0.5,
-      },
-      itemStyle: {
-        borderWidth: 0,
-      },
-      label: {
+    tooltip: {
+      trigger: 'item',
+      triggerOn: 'mousemove',
+      backgroundColor: colorSet.base70,
+      borderColor: colorSet.baseContent30,
+      textStyle: {
         color: colorSet.baseContent,
-        fontSize: isMiddleScreen.value ? 10 : 12,
-        formatter: (params: { name: string }) => {
-          const name = params.name
-          const length = isFullScreen.value ? 45 : isMiddleScreen.value ? 20 : 30
-          return name.length > length ? name.substring(0, length) + '...' : name
-        },
       },
-      nodeGap: 4,
-      nodeWidth: 20,
-      nodeAlign: 'left',
-      animation: true,
-      animationDuration: 1000,
-      animationEasing: 'cubicOut',
-      animationDelay: (idx: number) => idx * 50,
+      formatter: (params: {
+        dataType: string
+        data: {
+          name: string
+          nodeType?: string
+          nodeValue?: string
+          source: number
+          target: number
+          value: number
+          originalValue?: number
+        }
+      }) => {
+        if (params.dataType === 'node') {
+          const lines: string[] = []
+          if (params.data.nodeType === ruleMatchLabel) {
+            const match = commentMatchers.find(
+              (m) =>
+                params.data.name.startsWith(m.type + '=') &&
+                params.data.name.includes(m.firstValue),
+            )
+            if (match) lines.push(`<b>${match.comment}</b>`)
+          }
+          lines.push(
+            `${params.data.name}`,
+            `${t('nodeType')}: ${params.data.nodeType || t('unknown')}`,
+          )
+          if (params.data.nodeValue)
+            lines.push(
+              `${t(metric.value === 'count' ? 'connectionCount' : metric.value)}: ${params.data.nodeValue}`,
+            )
+          return lines.join('<br/>')
+        } else if (params.dataType === 'edge') {
+          const sourceNode = sankeyData.value.nodes.find((n) => n.id === params.data.source)
+          const targetNode = sankeyData.value.nodes.find((n) => n.id === params.data.target)
+          // 使用原始值显示真实的连接数量
+          const displayValue = params.data.originalValue ?? params.data.value
+          const isBytes = metric.value !== 'count'
+          const formattedValue = isBytes
+            ? prettyBytesHelper(displayValue, { binary: false })
+            : String(Math.round(displayValue))
+          const metricLabel = t(metric.value === 'count' ? 'connectionCount' : metric.value)
+          if (sourceNode && targetNode) {
+            return `${sourceNode.name} → ${targetNode.name}<br/>${metricLabel}: ${formattedValue}`
+          }
+          return `${metricLabel}: ${formattedValue}`
+        }
+        return ''
+      },
     },
-  ],
-}))
+    series: [
+      {
+        id: 'sankey',
+        type: 'sankey',
+        layout: 'none',
+        data: sankeyData.value.nodes,
+        links: sankeyData.value.links,
+        emphasis: {
+          focus: 'trajectory',
+        },
+        lineStyle: {
+          color: 'gradient',
+          curveness: 0.5,
+        },
+        itemStyle: {
+          borderWidth: 0,
+        },
+        label: {
+          color: colorSet.baseContent,
+          fontSize: isMiddleScreen.value ? 10 : 12,
+          formatter: (params: { name: string }) => {
+            const name = params.name
+            const length = isFullScreen.value ? 45 : isMiddleScreen.value ? 20 : 30
+            return name.length > length ? name.substring(0, length) + '...' : name
+          },
+        },
+        nodeGap: 4,
+        nodeWidth: 20,
+        nodeAlign: 'left',
+        animation: true,
+        animationDuration: 1000,
+        animationEasing: 'cubicOut',
+        animationDelay: (idx: number) => idx * 50,
+      },
+    ],
+  }
+})
 
 // Compute HTML overlay positions for Sankey node value labels.
 // Sankey nodes store layout as { x, y, dx, dy } on graph nodes (not getData().getItemLayout()).
@@ -671,7 +713,11 @@ onMounted(() => {
     isPaused.value = true
   })
   myChart.on('hideTip', () => {
-    isPaused.value = false
+    if (!isDragPaused.value) isPaused.value = false
+  })
+  myChart.on('mousedown', { seriesType: 'sankey' }, () => {
+    isDragPaused.value = true
+    isPaused.value = true
   })
 
   const updateChartData = debounce((newData: typeof sankeyData.value) => {
@@ -733,7 +779,11 @@ onMounted(() => {
             isPaused.value = true
           })
           fullScreenMyChart.value.on('hideTip', () => {
-            isPaused.value = false
+            if (!isDragPaused.value) isPaused.value = false
+          })
+          fullScreenMyChart.value.on('mousedown', { seriesType: 'sankey' }, () => {
+            isDragPaused.value = true
+            isPaused.value = true
           })
           fullScreenMyChart.value.on('finished', () => {
             if (fullScreenMyChart.value) updateFullScreenNodeValueGraphics(fullScreenMyChart.value)
