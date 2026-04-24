@@ -345,6 +345,33 @@ const zh: LANG_MESSAGE = {
   RarelyUsed: '很少使用',
   OccasionalUsed: '偶尔使用',
   MostUsed: '经常使用',
+
+  restartBackend: '重启后端',
+  restartBackendSuccess: '后端重启已发起',
+  restartBackendFailed: '后端重启失败',
+  overviewStatsTip: '自核心上次重启以来的累计流量。API 不提供重启时间。',
+  stats: '统计',
+  deviceSpeedChart: '设备速度（实时）',
+  trafficPieChart: '流量分布',
+  timeRange: '时间范围',
+  allData: '全部数据',
+  hideSmallValues: '隐藏 < 10 MB',
+  detailedBreakdown: '详细分类',
+  showingTopItems: '显示前 {count} / 共 {total}',
+  trafficDistributionTip: '按所选键分组的流量分布。\n{note}',
+  connectionTopologyTip: '通过规则和代理的连接路由。\n{note}',
+  chartTipAllHistory: '持久历史数据（仅在面板打开时记录；跨会话存储）。\n数据收集自: {time}',
+  chartTipAllHistoryUnknown:
+    '持久历史数据（仅在面板打开时记录；跨会话存储）。\n数据收集开始时间未记录（旧版数据）。',
+  chartTipTimeLimited: '仅内存数据 — 最近 500 条已关闭 + 活跃连接。\n最旧记录: {time}',
+  clearTopologyHistory: '清空拓扑历史',
+  clearTopologyHistoryConfirm: '确定要清空所有拓扑数据吗？此操作不可恢复。',
+  clearTopologyHistorySuccess: '拓扑数据清空成功',
+  scaleModeLog: '对数刻度',
+  scaleModeSqrt: '平方根刻度',
+  scaleModeLinear: '线性刻度',
+  metric: '指标',
+  scale: '缩放',
 }
 
 export default zh

@@ -1,5 +1,14 @@
 <template>
   <div class="base-container w-full p-4">
+    <div class="flex items-center gap-2 pb-3">
+      <span class="text-base-content/60 text-xs font-semibold tracking-wider uppercase">
+        {{ $t('overview') }}
+      </span>
+      <QuestionMarkCircleIcon
+        class="h-4 w-4 cursor-pointer"
+        @mouseenter="showTip($event, $t('overviewStatsTip'))"
+      />
+    </div>
     <!-- Surge-style stat cards -->
     <div class="grid grid-cols-2 gap-3 lg:grid-cols-3">
       <!-- Upload Speed -->
@@ -74,6 +83,7 @@
 <script setup lang="ts">
 import MiniSparkline from '@/components/overview/MiniSparkline.vue'
 import { getToolTipForParams } from '@/helper'
+import { useTooltip } from '@/helper/tooltip'
 import { prettyBytesHelper } from '@/helper/utils'
 import { activeConnections, downloadTotal, uploadTotal } from '@/store/connections'
 import {
@@ -85,9 +95,12 @@ import {
   uploadSpeed,
   uploadSpeedHistory,
 } from '@/store/overview'
+import { QuestionMarkCircleIcon } from '@heroicons/vue/24/outline'
 import dayjs from 'dayjs'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+
+const { showTip } = useTooltip()
 
 const { t } = useI18n()
 

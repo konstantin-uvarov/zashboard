@@ -352,6 +352,46 @@ const en = {
   RarelyUsed: 'Rarely used',
   OccasionalUsed: 'Occasionally used',
   MostUsed: 'Most used',
+
+  // CGI / sing-box backend restart
+  restartBackend: 'Restart Backend',
+  restartBackendSuccess: 'Backend restart initiated',
+  restartBackendFailed: 'Failed to restart backend',
+
+  // Overview stats tooltip
+  overviewStatsTip:
+    'Cumulative totals since the last core restart. Restart time is not exposed by the API.',
+
+  // Stats page
+  stats: 'Stats',
+  deviceSpeedChart: 'Device Speed (Real-time)',
+  trafficPieChart: 'Traffic Distribution',
+  timeRange: 'Time range',
+  allData: 'All data',
+  hideSmallValues: 'Hide < 10 MB',
+  detailedBreakdown: 'Detailed breakdown',
+  showingTopItems: 'Showing top {count} of {total}',
+
+  // Chart tooltips
+  trafficDistributionTip: 'Traffic distribution by the selected key.\n{note}',
+  connectionTopologyTip: 'Connection routing through rules and proxies.\n{note}',
+  chartTipAllHistory:
+    'Persistent all-time data (only recorded while the panel is open; stored across sessions).\nData collected since: {time}',
+  chartTipAllHistoryUnknown:
+    'Persistent all-time data (only recorded while the panel is open; stored across sessions).\nData collection start time is not recorded (legacy data).',
+  chartTipTimeLimited:
+    'In-memory data only — last 500 closed connections + active.\nOldest entry: {time}',
+
+  // Topology chart
+  clearTopologyHistory: 'Clear topology history',
+  clearTopologyHistoryConfirm:
+    'Are you sure you want to clear all topology data? This action cannot be undone.',
+  clearTopologyHistorySuccess: 'Topology data cleared successfully',
+  scaleModeLog: 'Log scale',
+  scaleModeSqrt: 'Sqrt scale',
+  scaleModeLinear: 'Linear scale',
+  metric: 'Metric',
+  scale: 'Scale',
 }
 
 export type LANG_MESSAGE = typeof en

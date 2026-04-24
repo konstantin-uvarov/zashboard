@@ -178,3 +178,53 @@ export const getConnectionHistoryFromIndexedDB = async (
 export const clearConnectionHistoryFromIndexedDB = async () => {
   return connectionHistoryDB.clear()
 }
+
+export interface TopoFlowData {
+  sourceIP: string
+  ruleKey: string
+  chainLast: string
+  chainFirst: string
+  count: number
+  download: number
+  upload: number
+}
+
+const topoFlowsDB = useIndexedDB('topo-flows')
+
+export const saveTopoFlowsToIndexedDB = async (uuid: string, data: TopoFlowData[]) => {
+  return topoFlowsDB.put(uuid, JSON.stringify(data))
+}
+
+export const getTopoFlowsFromIndexedDB = async (uuid: string): Promise<TopoFlowData[]> => {
+  const jsonData = await topoFlowsDB.get(uuid)
+  if (!jsonData) return []
+  try {
+    return JSON.parse(jsonData) as TopoFlowData[]
+  } catch {
+    return []
+  }
+}
+
+export const clearTopoFlowsFromIndexedDB = async () => {
+  return topoFlowsDB.clear()
+}
+
+export const saveConnectionHistoryStartTime = async (uuid: string, time: number) =>
+  connectionHistoryDB.put(`${uuid}-meta/startTime`, String(time))
+
+export const getConnectionHistoryStartTime = async (uuid: string): Promise<number | null> => {
+  const val = await connectionHistoryDB.get(`${uuid}-meta/startTime`)
+  if (!val) return null
+  const n = Number(val)
+  return isNaN(n) ? null : n
+}
+
+export const saveTopoStartTime = async (uuid: string, time: number) =>
+  topoFlowsDB.put(`${uuid}-meta/startTime`, String(time))
+
+export const getTopoStartTime = async (uuid: string): Promise<number | null> => {
+  const val = await topoFlowsDB.get(`${uuid}-meta/startTime`)
+  if (!val) return null
+  const n = Number(val)
+  return isNaN(n) ? null : n
+}

@@ -188,6 +188,33 @@ export const updateRuleProviderAPI = (name: string) => {
   return axios.put(`/providers/rules/${encodeURIComponent(name)}`)
 }
 
+// CGI bridge for sing-box route rule management
+const getCgiBaseUrl = () => {
+  const backend = activeBackend.value
+  if (!backend) return ''
+  return `${backend.protocol}://${backend.host}/cgi-bin/sing-box-rules-api.sh`
+}
+
+export const fetchRulesCgiAPI = async (): Promise<{ rules: Rule[] }> => {
+  const response = await fetch(getCgiBaseUrl())
+  if (!response.ok) throw new Error(`CGI error: ${response.status}`)
+  return response.json()
+}
+
+export const toggleRuleCgiAPI = async (uuid: string) => {
+  const response = await fetch(`${getCgiBaseUrl()}/${encodeURIComponent(uuid)}`, {
+    method: 'PUT',
+  })
+  if (!response.ok) throw new Error(`CGI toggle error: ${response.status}`)
+}
+
+export const restartBackendCgiAPI = async () => {
+  const response = await fetch(`${getCgiBaseUrl()}/restart`, {
+    method: 'POST',
+  })
+  if (!response.ok) throw new Error(`CGI restart error: ${response.status}`)
+}
+
 export const blockConnectionByIdAPI = (id: string) => {
   return axios.delete(`/connections/smart/${id}`)
 }

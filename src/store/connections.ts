@@ -5,7 +5,7 @@ import type { Connection, ConnectionRawMessage } from '@/types'
 import { useStorage, watchOnce } from '@vueuse/core'
 import dayjs from 'dayjs'
 import { computed, ref, watch } from 'vue'
-import { initAggregatedDataMap, saveConnectionHistory } from './connHistory'
+import { initAggregatedDataMap, initTopoFlowsData, saveConnectionHistory } from './connHistory'
 import { autoDisconnectIdleUDP, autoDisconnectIdleUDPTime, isConnectionCard } from './settings'
 
 export const connectionTabShow = ref(CONNECTION_TAB_TYPE.ACTIVE)
@@ -41,6 +41,7 @@ export const initConnections = () => {
   uploadTotal.value = 0
   previousConnectionsMap.clear()
   initAggregatedDataMap()
+  initTopoFlowsData()
   const ws = fetchConnectionsAPI<{
     connections: ConnectionRawMessage[]
     downloadTotal: number

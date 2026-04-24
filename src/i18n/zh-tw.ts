@@ -345,6 +345,33 @@ const zhTW: LANG_MESSAGE = {
   RarelyUsed: '很少使用',
   OccasionalUsed: '偶爾使用',
   MostUsed: '經常使用',
+
+  restartBackend: '重啟後端',
+  restartBackendSuccess: '後端重啟已發起',
+  restartBackendFailed: '後端重啟失敗',
+  overviewStatsTip: '自核心上次重啟以來的累計流量。API 不提供重啟時間。',
+  stats: '統計',
+  deviceSpeedChart: '設備速度（即時）',
+  trafficPieChart: '流量分佈',
+  timeRange: '時間範圍',
+  allData: '全部數據',
+  hideSmallValues: '隱藏 < 10 MB',
+  detailedBreakdown: '詳細分類',
+  showingTopItems: '顯示前 {count} / 共 {total}',
+  trafficDistributionTip: '按所選鍵分組的流量分佈。\n{note}',
+  connectionTopologyTip: '通過規則和代理的連接路由。\n{note}',
+  chartTipAllHistory: '持久歷史數據（僅在面板開啟時記錄；跨會話存儲）。\n數據收集自: {time}',
+  chartTipAllHistoryUnknown:
+    '持久歷史數據（僅在面板開啟時記錄；跨會話存儲）。\n數據收集開始時間未記錄（舊版數據）。',
+  chartTipTimeLimited: '僅內存數據 — 最近 500 條已關閉 + 活躍連接。\n最舊記錄: {time}',
+  clearTopologyHistory: '清空拓撲歷史',
+  clearTopologyHistoryConfirm: '確定要清空所有拓撲數據嗎？此操作不可恢復。',
+  clearTopologyHistorySuccess: '拓撲數據清空成功',
+  scaleModeLog: '對數刻度',
+  scaleModeSqrt: '平方根刻度',
+  scaleModeLinear: '線性刻度',
+  metric: '指標',
+  scale: '縮放',
 }
 
 export default zhTW

@@ -354,6 +354,37 @@ const ru: LANG_MESSAGE = {
   RarelyUsed: 'Редко используется',
   OccasionalUsed: 'Иногда используется',
   MostUsed: 'Часто используется',
+
+  restartBackend: 'Перезапустить бэкенд',
+  restartBackendSuccess: 'Перезапуск бэкенда инициирован',
+  restartBackendFailed: 'Не удалось перезапустить бэкенд',
+  overviewStatsTip:
+    'Суммарный трафик с момента последнего перезапуска ядра. Время перезапуска недоступно через API.',
+  stats: 'Статистика',
+  deviceSpeedChart: 'Скорость по устройствам (реальное время)',
+  trafficPieChart: 'Распределение трафика',
+  timeRange: 'Период',
+  allData: 'Все данные',
+  hideSmallValues: 'Скрыть < 10 МБ',
+  detailedBreakdown: 'Подробная разбивка',
+  showingTopItems: 'Показано топ {count} из {total}',
+  trafficDistributionTip: 'Распределение трафика по выбранному ключу.\n{note}',
+  connectionTopologyTip: 'Маршрутизация соединений через правила и прокси.\n{note}',
+  chartTipAllHistory:
+    'Постоянные данные (записываются только пока панель открыта; сохраняются между сессиями).\nДанные собираются с: {time}',
+  chartTipAllHistoryUnknown:
+    'Постоянные данные (записываются только пока панель открыта; сохраняются между сессиями).\nВремя начала сбора данных не записано (устаревшие данные).',
+  chartTipTimeLimited:
+    'Только данные в памяти — последние 500 закрытых + активные.\nСамая старая запись: {time}',
+  clearTopologyHistory: 'Очистить историю топологии',
+  clearTopologyHistoryConfirm:
+    'Вы уверены, что хотите очистить все данные топологии? Это действие нельзя отменить.',
+  clearTopologyHistorySuccess: 'Данные топологии успешно очищены',
+  scaleModeLog: 'Логарифмическая',
+  scaleModeSqrt: 'Корень квадратный',
+  scaleModeLinear: 'Линейная',
+  metric: 'Метрика',
+  scale: 'Масштаб',
 }
 
 export default ru

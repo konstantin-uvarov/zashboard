@@ -78,6 +78,7 @@ export type Rule = {
   proxy: string
   size: number
   uuid: string
+  comment?: string
   // sing-box-reFind
   disabled?: boolean
   // mihomo

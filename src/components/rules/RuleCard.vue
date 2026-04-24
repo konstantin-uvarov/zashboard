@@ -21,6 +21,12 @@
           {{ rule.payload }}
         </span>
         <span
+          v-if="rule.comment"
+          class="text-base-content/50 ml-2 text-xs italic"
+        >
+          — {{ rule.comment }}
+        </span>
+        <span
           v-if="typeof size === 'number' && size !== -1"
           class="text-base-content/50 ml-1 text-xs tabular-nums"
         >
@@ -85,6 +91,8 @@
 <script setup lang="ts">
 import {
   disconnectByIdAPI,
+  isSingBox,
+  toggleRuleCgiAPI,
   toggleRuleDisabledAPI,
   toggleRuleDisabledSingBoxAPI,
   updateRuleProviderAPI,
@@ -177,7 +185,11 @@ const toggleRuleDisabledHandler = async () => {
     isTogglingDisabled.value = true
     const willBeDisabled = !isDisabled.value
 
-    if (props.rule.uuid) {
+    if (isSingBox.value && props.rule.uuid) {
+      await toggleRuleCgiAPI(props.rule.uuid)
+      // Wait for sing-box to restart after toggle before re-fetching
+      await new Promise((resolve) => setTimeout(resolve, 3000))
+    } else if (props.rule.uuid) {
       await toggleRuleDisabledSingBoxAPI(props.rule.uuid)
     } else {
       await toggleRuleDisabledAPI({ [props.rule.index]: willBeDisabled })

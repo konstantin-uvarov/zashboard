@@ -2,8 +2,15 @@ import { getProcessFromConnection } from '@/helper'
 import {
   ConnectionHistoryType,
   getConnectionHistoryFromIndexedDB,
+  getConnectionHistoryStartTime,
+  getTopoFlowsFromIndexedDB,
+  getTopoStartTime,
+  saveConnectionHistoryStartTime,
   saveConnectionHistoryToIndexedDB,
+  saveTopoFlowsToIndexedDB,
+  saveTopoStartTime,
   type ConnectionHistoryData,
+  type TopoFlowData,
 } from '@/helper/indexeddb'
 import type { Connection } from '@/types'
 import ipaddr from 'ipaddr.js'
@@ -23,12 +30,17 @@ const allHistoryTypes = [
   ConnectionHistoryType.Outbound,
 ]
 
+export const historyStartTime = ref<number | null>(null)
+export const topoHistoryStartTime = ref<number | null>(null)
+
 export const aggregatedDataMap = ref<Record<ConnectionHistoryType, ConnectionHistoryData[]>>({
   [ConnectionHistoryType.SourceIP]: [],
   [ConnectionHistoryType.Destination]: [],
   [ConnectionHistoryType.Process]: [],
   [ConnectionHistoryType.Outbound]: [],
 })
+
+export const topoFlowsData = ref<TopoFlowData[]>([])
 
 export const initAggregatedDataMap = () => {
   aggregatedDataMap.value = {
@@ -38,6 +50,7 @@ export const initAggregatedDataMap = () => {
     [ConnectionHistoryType.Outbound]: [],
   }
   isInitializedPromise.value = new Promise(async (resolve) => {
+    let hasData = false
     for (const type of allHistoryTypes) {
       const historicalData = await getConnectionHistoryFromIndexedDB(uuid(), type)
 
@@ -48,9 +61,92 @@ export const initAggregatedDataMap = () => {
       }
 
       aggregatedDataMap.value[type] = finalData
+      if (finalData.length > 0) hasData = true
     }
+
+    const storedStartTime = await getConnectionHistoryStartTime(uuid())
+    if (!hasData) {
+      const now = Date.now()
+      historyStartTime.value = now
+      await saveConnectionHistoryStartTime(uuid(), now)
+    } else if (storedStartTime !== null) {
+      historyStartTime.value = storedStartTime
+    } else {
+      historyStartTime.value = null // legacy data — start time not recorded
+    }
+
     resolve(true)
   })
+}
+
+export const initTopoFlowsData = async () => {
+  topoFlowsData.value = []
+  const flows = await getTopoFlowsFromIndexedDB(uuid())
+  topoFlowsData.value = flows
+
+  const storedStartTime = await getTopoStartTime(uuid())
+  if (flows.length === 0) {
+    const now = Date.now()
+    topoHistoryStartTime.value = now
+    await saveTopoStartTime(uuid(), now)
+  } else if (storedStartTime !== null) {
+    topoHistoryStartTime.value = storedStartTime
+  } else {
+    topoHistoryStartTime.value = null // legacy data — start time not recorded
+  }
+}
+
+export const aggregateTopoFlows = (connections: Connection[]): TopoFlowData[] => {
+  const map = new Map<string, TopoFlowData>()
+  connections.forEach((conn) => {
+    const chains = conn.chains || []
+    if (chains.length === 0) return
+    const sourceIP = conn.metadata.sourceIP
+    const ruleKey = conn.rulePayload ? `${conn.rule}: ${conn.rulePayload}` : conn.rule
+    const chainLast = chains[chains.length - 1]
+    const chainFirst = chains[0]
+    const key = `${sourceIP}|||${ruleKey}|||${chainLast}|||${chainFirst}`
+    if (map.has(key)) {
+      const existing = map.get(key)!
+      existing.count++
+      existing.download += conn.download
+      existing.upload += conn.upload
+    } else {
+      map.set(key, {
+        sourceIP,
+        ruleKey,
+        chainLast,
+        chainFirst,
+        count: 1,
+        download: conn.download,
+        upload: conn.upload,
+      })
+    }
+  })
+  return Array.from(map.values())
+}
+
+export const mergeTopoFlows = (
+  historical: TopoFlowData[],
+  newFlows: TopoFlowData[],
+): TopoFlowData[] => {
+  const map = new Map<string, TopoFlowData>()
+  historical.forEach((item) => {
+    const key = `${item.sourceIP}|||${item.ruleKey}|||${item.chainLast}|||${item.chainFirst}`
+    map.set(key, { ...item })
+  })
+  newFlows.forEach((item) => {
+    const key = `${item.sourceIP}|||${item.ruleKey}|||${item.chainLast}|||${item.chainFirst}`
+    if (map.has(key)) {
+      const existing = map.get(key)!
+      existing.count += item.count
+      existing.download += item.download
+      existing.upload += item.upload
+    } else {
+      map.set(key, { ...item })
+    }
+  })
+  return Array.from(map.values())
 }
 
 export const aggregateConnections = (
@@ -140,5 +236,14 @@ export const saveConnectionHistory = async (newClosedConnections: Connection[]) 
     } catch (error) {
       console.error(`Failed to save connection history for ${type}:`, error)
     }
+  }
+
+  try {
+    const newFlows = aggregateTopoFlows(newClosedConnections)
+    const merged = mergeTopoFlows(topoFlowsData.value, newFlows)
+    topoFlowsData.value = merged
+    await saveTopoFlowsToIndexedDB(uuid(), merged)
+  } catch (error) {
+    console.error('Failed to save topology flows:', error)
   }
 }

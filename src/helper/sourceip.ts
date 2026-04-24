@@ -1,3 +1,4 @@
+import { DHCP_LABELS } from '@/helper/dhcpLabels'
 import { sourceIPLabelList } from '@/store/settings'
 import { activeBackend } from '@/store/setup'
 import * as ipaddr from 'ipaddr.js'
@@ -92,5 +93,17 @@ export const getIPLabelFromMap = (ip: string) => {
     }
   }
 
+  // Fall back to static DHCP map
+  if (DHCP_LABELS[ip]) {
+    return cacheResult(ip, DHCP_LABELS[ip])
+  }
+
   return cacheResult(ip, ip)
+}
+
+/** Returns "IP (Label)" when a label is known, or just "IP" if unlabeled. */
+export const getIPDisplayLabel = (ip: string) => {
+  const label = getIPLabelFromMap(ip)
+  if (!label || label === ip) return ip
+  return `${ip} (${label})`
 }

@@ -10,6 +10,8 @@ type ToolTipParams = {
   data: {
     value: number
     name: number
+    dl?: number
+    ul?: number
   }
   seriesName: string
   color: string
