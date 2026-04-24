@@ -150,7 +150,7 @@ const en = {
   showStatisticsWhenSidebarCollapsed: 'Show statistics when sidebar collapsed',
   totalConnections: 'Connection statistics',
   totalConnectionsTip:
-    'Persistent all-time data (stored across sessions).\nData collected since: {statsStartTime}',
+    'Persistent all-time data (only recorded while the panel is open; stored across sessions).\nData collected since: {statsStartTime}',
   mostDownloadHost: 'Most downloaded host',
   mostUploadHost: 'Most uploaded host',
   mostDownloadSourceIP: 'Most downloaded source IP',
@@ -316,9 +316,9 @@ const en = {
   trafficDistributionTip: 'Traffic distribution by the selected key.\n{note}',
   connectionTopologyTip: 'Connection routing through rules and proxies.\n{note}',
   chartTipAllHistory:
-    'Persistent all-time data (stored across sessions).\nData collected since: {time}',
+    'Persistent all-time data (only recorded while the panel is open; stored across sessions).\nData collected since: {time}',
   chartTipAllHistoryUnknown:
-    'Persistent all-time data (stored across sessions).\nData collection start time is not recorded (legacy data).',
+    'Persistent all-time data (only recorded while the panel is open; stored across sessions).\nData collection start time is not recorded (legacy data).',
   chartTipTimeLimited:
     'In-memory data only — last 500 closed connections + active.\nOldest entry: {time}',
   clearTopologyHistory: 'Clear topology history',

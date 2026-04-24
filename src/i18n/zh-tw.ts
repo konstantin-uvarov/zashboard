@@ -150,7 +150,8 @@ const zhTW: LANG_MESSAGE = {
   ipScreenshotTip: '截圖時請確保隱藏IP',
   showStatisticsWhenSidebarCollapsed: '側邊欄摺疊時顯示統計',
   totalConnections: '連接統計',
-  totalConnectionsTip: '持久全時段數據（跨會話存儲）。\n數據收集自: {statsStartTime}',
+  totalConnectionsTip:
+    '持久歷史數據（僅在面板開啟時記錄；跨會話存儲）。\n數據收集自: {statsStartTime}',
   mostDownloadHost: '最多下載主機',
   mostUploadHost: '最多上傳主機',
   mostDownloadSourceIP: '最多下載源IP',
@@ -312,8 +313,9 @@ const zhTW: LANG_MESSAGE = {
   dataSince: '數據起始: {time}',
   trafficDistributionTip: '按所選鍵分組的流量分佈。\n{note}',
   connectionTopologyTip: '通過規則和代理的連接路由。\n{note}',
-  chartTipAllHistory: '持久全時段數據（跨會話存儲）。\n數據收集自: {time}',
-  chartTipAllHistoryUnknown: '持久全時段數據（跨會話存儲）。\n數據收集開始時間未記錄（舊版數據）。',
+  chartTipAllHistory: '持久歷史數據（僅在面板開啟時記錄；跨會話存儲）。\n數據收集自: {time}',
+  chartTipAllHistoryUnknown:
+    '持久歷史數據（僅在面板開啟時記錄；跨會話存儲）。\n數據收集開始時間未記錄（舊版數據）。',
   chartTipTimeLimited: '僅內存數據——最近500條已關閉連接+活躍連接。\n最早條目: {time}',
   clearTopologyHistory: '清空拓撲歷史',
   clearTopologyHistoryConfirm: '確定要清空所有拓撲數據嗎？此操作不可恢復。',
