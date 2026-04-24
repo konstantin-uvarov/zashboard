@@ -147,6 +147,8 @@ export enum ConnectionHistoryType {
   Destination = 'destination',
   Process = 'process',
   Outbound = 'outbound',
+  Network = 'network',
+  GeoIP = 'geoIP',
 }
 
 const connectionHistoryDB = useIndexedDB('connection-history')

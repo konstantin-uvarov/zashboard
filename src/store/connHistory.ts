@@ -28,6 +28,8 @@ const allHistoryTypes = [
   ConnectionHistoryType.Destination,
   ConnectionHistoryType.Process,
   ConnectionHistoryType.Outbound,
+  ConnectionHistoryType.Network,
+  ConnectionHistoryType.GeoIP,
 ]
 
 export const historyStartTime = ref<number | null>(null)
@@ -38,6 +40,8 @@ export const aggregatedDataMap = ref<Record<ConnectionHistoryType, ConnectionHis
   [ConnectionHistoryType.Destination]: [],
   [ConnectionHistoryType.Process]: [],
   [ConnectionHistoryType.Outbound]: [],
+  [ConnectionHistoryType.Network]: [],
+  [ConnectionHistoryType.GeoIP]: [],
 })
 
 export const topoFlowsData = ref<TopoFlowData[]>([])
@@ -48,6 +52,8 @@ export const initAggregatedDataMap = () => {
     [ConnectionHistoryType.Destination]: [],
     [ConnectionHistoryType.Process]: [],
     [ConnectionHistoryType.Outbound]: [],
+    [ConnectionHistoryType.Network]: [],
+    [ConnectionHistoryType.GeoIP]: [],
   }
   isInitializedPromise.value = new Promise(async (resolve) => {
     let hasData = false
@@ -174,6 +180,10 @@ export const aggregateConnections = (
       key = getProcessFromConnection(connection)
     } else if (type === ConnectionHistoryType.Outbound) {
       key = connection.chains[0] || '-'
+    } else if (type === ConnectionHistoryType.Network) {
+      key = connection.metadata.network || 'unknown'
+    } else if (type === ConnectionHistoryType.GeoIP) {
+      key = connection.metadata.destinationGeoIP || 'Unknown'
     }
 
     if (map.has(key)) {

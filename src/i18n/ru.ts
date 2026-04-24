@@ -335,6 +335,8 @@ const ru: LANG_MESSAGE = {
   scaleModeLinear: 'Линейная',
   metric: 'Метрика',
   scale: 'Масштаб',
+  protocolBreakdown: 'Распределение по протоколам',
+  geoIPChart: 'Распределение GeoIP',
 }
 
 export default ru

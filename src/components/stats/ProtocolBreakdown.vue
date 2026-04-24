@@ -2,7 +2,7 @@
   <div class="card">
     <div class="card-title flex flex-wrap items-center justify-between gap-2 px-4 pt-4">
       <div class="flex items-center gap-2">
-        <span>{{ $t('trafficPieChart') }}</span>
+        <span>{{ $t('protocolBreakdown') }}</span>
         <QuestionMarkCircleIcon
           class="h-4 w-4 cursor-pointer"
           @mouseenter="showTip($event, chartTip)"
@@ -24,20 +24,6 @@
             </option>
           </select>
         </div>
-        <div class="flex items-center gap-2">
-          <span class="text-sm">{{ $t('aggregateBy') }}</span>
-          <select
-            v-model="groupBy"
-            class="select select-sm"
-          >
-            <option :value="ConnectionHistoryType.SourceIP">{{ $t('aggregateBySourceIP') }}</option>
-            <option :value="ConnectionHistoryType.Outbound">{{ $t('aggregateByOutbound') }}</option>
-            <option :value="ConnectionHistoryType.Destination">
-              {{ $t('aggregateByDestination') }}
-            </option>
-            <option :value="ConnectionHistoryType.Process">{{ $t('aggregateByProcess') }}</option>
-          </select>
-        </div>
       </div>
     </div>
     <div class="card-body relative p-2!">
@@ -53,7 +39,7 @@
         {{ $t('noData') }}
       </div>
       <span
-        class="border-b-primary/30 border-t-primary/60 border-l-info/30 border-r-info/60 text-base-content/10 bg-base-100/70 hidden"
+        class="text-base-content/10 bg-base-100/70 hidden"
         ref="colorRef"
       />
     </div>
@@ -61,7 +47,6 @@
 </template>
 
 <script setup lang="ts">
-import { getIPColor } from '@/composables/ipColorMap'
 import {
   TIME_RANGE_OPTIONS,
   filterConnectionsByTimeRange,
@@ -70,7 +55,6 @@ import {
   type TimeRangeValue,
 } from '@/composables/timeRange'
 import { ConnectionHistoryType } from '@/helper/indexeddb'
-import { getIPDisplayLabel } from '@/helper/sourceip'
 import { useTooltip } from '@/helper/tooltip'
 import { prettyBytesHelper } from '@/helper/utils'
 import {
@@ -91,11 +75,11 @@ import { debounce } from 'lodash'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer])
-
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
+
+echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer])
 
 const { t } = useI18n()
 const { showTip } = useTooltip()
@@ -104,16 +88,10 @@ const CHART_MARGIN = 50
 
 const chartEl = ref<HTMLElement | null>(null)
 const colorRef = ref<HTMLElement | null>(null)
-const groupBy = useLocalStorage<ConnectionHistoryType>(
-  'stats-pie-groupby',
-  ConnectionHistoryType.SourceIP,
-)
-const timeRange = useLocalStorage<TimeRangeValue>('stats-pie-timerange', 'all')
+const timeRange = useLocalStorage<TimeRangeValue>('stats-protocol-timerange', 'all')
 
-const colorSet = {
-  baseContent: '',
-  base70: '',
-}
+const colorSet = { baseContent: '', base70: '' }
+let fontFamily = ''
 
 const updateColorSet = () => {
   if (!colorRef.value) return
@@ -122,35 +100,35 @@ const updateColorSet = () => {
   colorSet.base70 = style.backgroundColor
 }
 
-let fontFamily = ''
 const updateFontFamily = () => {
   if (!colorRef.value) return
   fontFamily = getComputedStyle(colorRef.value).fontFamily
 }
 
+const formatProtocol = (key: string) => key.toUpperCase()
+
 const chartData = computed(() => {
   let entries
   if (timeRange.value === 'all') {
-    entries = aggregatedDataMap.value[groupBy.value] ?? []
+    entries = aggregatedDataMap.value[ConnectionHistoryType.Network] ?? []
   } else {
     const rangeMs = getTimeRangeMs(timeRange.value)
     const filtered = filterConnectionsByTimeRange(
       [...closedConnections.value, ...activeConnections.value],
       rangeMs,
     )
-    const live = aggregateConnections(filtered, groupBy.value)
+    const live = aggregateConnections(filtered, ConnectionHistoryType.Network)
     entries = mergeAggregatedData([], live)
   }
   return [...entries]
     .sort((a, b) => b.download + b.upload - (a.download + a.upload))
-    .map((entry) => {
-      const label =
-        groupBy.value === ConnectionHistoryType.SourceIP ? getIPDisplayLabel(entry.key) : entry.key
-      const color =
-        groupBy.value === ConnectionHistoryType.SourceIP ? getIPColor(entry.key) : undefined
-      return { label, download: entry.download, upload: entry.upload, color }
-    })
-    .filter((d) => d.download > 0 || d.upload > 0)
+    .map((entry) => ({
+      label: formatProtocol(entry.key),
+      download: entry.download,
+      upload: entry.upload,
+      count: entry.count,
+    }))
+    .filter((d) => d.download > 0 || d.upload > 0 || d.count > 0)
 })
 
 const chartHeight = computed(() =>
@@ -179,85 +157,76 @@ const chartTip = computed(() => {
   return t('trafficDistributionTip', { note })
 })
 
-const buildOptions = () => {
-  return {
-    grid: { left: 8, right: 80, top: 8, bottom: 28, containLabel: true },
-    tooltip: {
-      trigger: 'axis',
-      axisPointer: { type: 'shadow' },
-      backgroundColor: colorSet.base70,
-      borderColor: colorSet.base70,
-      textStyle: { color: colorSet.baseContent, fontFamily },
-      formatter: (params: { dataIndex: number }[]) => {
-        const idx = params[0]?.dataIndex ?? 0
-        const d = chartData.value[idx]
-        if (!d) return ''
-        const dl = prettyBytesHelper(d.download, { binary: false })
-        const ul = prettyBytesHelper(d.upload, { binary: false })
-        const total = prettyBytesHelper(d.download + d.upload, { binary: false })
-        return `<div style="padding:2px 6px">${d.label}<br/>&#x2193; ${dl}&nbsp;&nbsp;&#x2191; ${ul}<br/>&#x2211; ${total}</div>`
-      },
+const buildOptions = () => ({
+  grid: { left: 8, right: 80, top: 8, bottom: 28, containLabel: true },
+  tooltip: {
+    trigger: 'axis',
+    axisPointer: { type: 'shadow' },
+    backgroundColor: colorSet.base70,
+    borderColor: colorSet.base70,
+    textStyle: { color: colorSet.baseContent, fontFamily },
+    formatter: (params: { dataIndex: number }[]) => {
+      const idx = params[0]?.dataIndex ?? 0
+      const d = chartData.value[idx]
+      if (!d) return ''
+      const dl = prettyBytesHelper(d.download, { binary: false })
+      const ul = prettyBytesHelper(d.upload, { binary: false })
+      const total = prettyBytesHelper(d.download + d.upload, { binary: false })
+      return (
+        `<div style="padding:2px 6px">${d.label}<br/>` +
+        `&#x2193; ${dl}&nbsp;&nbsp;&#x2191; ${ul}<br/>` +
+        `&#x2211; ${total}&nbsp;&nbsp;#${d.count}</div>`
+      )
     },
-    xAxis: {
-      type: 'value',
-      axisLabel: {
+  },
+  xAxis: {
+    type: 'value',
+    axisLabel: {
+      color: colorSet.baseContent,
+      fontFamily,
+      formatter: (v: number) => prettyBytesHelper(v, { binary: false }),
+    },
+    splitLine: { lineStyle: { color: colorSet.baseContent + '20' } },
+  },
+  yAxis: {
+    type: 'category',
+    data: chartData.value.map((d) => d.label),
+    inverse: true,
+    axisLabel: { color: colorSet.baseContent, fontFamily },
+    axisTick: { show: false },
+    axisLine: { show: false },
+  },
+  series: [
+    {
+      name: 'download',
+      type: 'bar',
+      stack: 'traffic',
+      data: chartData.value.map((d) => ({ value: d.download })),
+      barMaxWidth: 20,
+      emphasis: { disabled: true },
+    },
+    {
+      name: 'upload',
+      type: 'bar',
+      stack: 'traffic',
+      data: chartData.value.map((d) => ({ value: d.upload })),
+      barMaxWidth: 20,
+      itemStyle: { opacity: 0.6 },
+      emphasis: { disabled: true },
+      label: {
+        show: true,
+        position: 'right',
         color: colorSet.baseContent,
         fontFamily,
-        formatter: (v: number) => prettyBytesHelper(v, { binary: false }),
-      },
-      splitLine: { lineStyle: { color: colorSet.baseContent + '20' } },
-    },
-    yAxis: {
-      type: 'category',
-      data: chartData.value.map((d) => d.label),
-      inverse: true,
-      axisLabel: {
-        color: colorSet.baseContent,
-        fontFamily,
-        width: 240,
-        overflow: 'truncate',
-      },
-      axisTick: { show: false },
-      axisLine: { show: false },
-    },
-    series: [
-      {
-        name: 'download',
-        type: 'bar',
-        stack: 'traffic',
-        data: chartData.value.map((d) => ({
-          value: d.download,
-          itemStyle: d.color ? { color: d.color } : {},
-        })),
-        barMaxWidth: 20,
-        emphasis: { disabled: true },
-      },
-      {
-        name: 'upload',
-        type: 'bar',
-        stack: 'traffic',
-        data: chartData.value.map((d) => ({
-          value: d.upload,
-          itemStyle: d.color ? { color: d.color + '80' } : {},
-        })),
-        barMaxWidth: 20,
-        itemStyle: { opacity: 0.6 },
-        emphasis: { disabled: true },
-        label: {
-          show: true,
-          position: 'right',
-          color: colorSet.baseContent,
-          fontFamily,
-          formatter: (params: { dataIndex: number }) => {
-            const d = chartData.value[params.dataIndex]
-            if (!d) return ''
-            return prettyBytesHelper(d.download + d.upload, { binary: false })
-          },
+        formatter: (params: { dataIndex: number }) => {
+          const d = chartData.value[params.dataIndex]
+          if (!d) return ''
+          return prettyBytesHelper(d.download + d.upload, { binary: false })
         },
       },
-    ],
-  }
-}
+    },
+  ],
+})
 
 let myChart: echarts.ECharts | null = null
 
@@ -286,8 +255,10 @@ onMounted(() => {
   })
 
   const { width } = useElementSize(chartEl)
-  const resize = debounce(() => myChart?.resize(), 100)
-  watch(width, resize)
+  watch(
+    width,
+    debounce(() => myChart?.resize(), 100),
+  )
 })
 
 onUnmounted(() => {
