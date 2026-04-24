@@ -199,6 +199,7 @@ import { prettyBytesHelper } from '@/helper/utils'
 import {
   aggregateConnections,
   aggregatedDataMap,
+  historyStartTime,
   initAggregatedDataMap,
   mergeAggregatedData,
 } from '@/store/connHistory'
@@ -389,12 +390,12 @@ const autoCleanupInterval = useStorage<AutoCleanupInterval>(
   'config/connection-history-auto-cleanup-interval',
   AutoCleanupInterval.Month,
 )
-const startTime = useStorage<number>('cache/connection-history-stats-start-time', Date.now())
 const totalConnectionsTip = computed(() => {
-  const dayjsTime = dayjs(startTime.value)
-  const baseTip = t('totalConnectionsTip', {
-    statsStartTime: `${dayjsTime.format('YYYY-MM-DD HH:mm')} (${dayjsTime.fromNow()})`,
-  })
+  const statsStartTime =
+    historyStartTime.value !== null
+      ? `${dayjs(historyStartTime.value).format('YYYY-MM-DD HH:mm')} (${dayjs(historyStartTime.value).fromNow()})`
+      : t('unknown')
+  const baseTip = t('totalConnectionsTip', { statsStartTime })
   if (timeRange.value === 'all') return baseTip
   const rangeMs = getTimeRangeMs(timeRange.value)
   const filtered = filterConnectionsByTimeRange(
@@ -425,16 +426,18 @@ const checkAndPerformAutoCleanup = async () => {
   if (autoCleanupInterval.value === AutoCleanupInterval.Never) {
     return
   }
+  if (historyStartTime.value === null) {
+    return // legacy data with unknown start time — skip auto-cleanup
+  }
 
   const now = Date.now()
   const intervalMs = getCleanupIntervalMs(autoCleanupInterval.value)
-  const timeSinceLastCleanup = now - startTime.value
+  const timeSinceLastCleanup = now - historyStartTime.value
 
   if (timeSinceLastCleanup >= intervalMs) {
     try {
       await clearConnectionHistoryFromIndexedDB()
       await initAggregatedDataMap()
-      startTime.value = now
     } catch (error) {
       console.error('Failed to perform auto cleanup:', error)
     }
@@ -445,7 +448,6 @@ const handleClearHistory = async () => {
   try {
     await clearConnectionHistoryFromIndexedDB()
     await initAggregatedDataMap()
-    startTime.value = Date.now()
     showClearDialog.value = false
     showNotification({
       content: t('clearConnectionHistorySuccess'),

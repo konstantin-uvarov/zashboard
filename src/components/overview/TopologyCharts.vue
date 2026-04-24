@@ -7,6 +7,12 @@
           class="h-4 w-4 cursor-pointer font-normal"
           @mouseenter="showTip($event, chartTip)"
         />
+        <button
+          class="btn btn-circle btn-sm"
+          @click="showClearDialog = true"
+        >
+          <TrashIcon class="h-4 w-4" />
+        </button>
       </div>
       <div class="flex items-center gap-2">
         <select
@@ -154,9 +160,32 @@
       </div>
     </div>
   </Teleport>
+  <DialogWrapper
+    v-model="showClearDialog"
+    :title="$t('clearTopologyHistory')"
+  >
+    <div class="flex flex-col gap-4 p-2">
+      <p class="text-sm">{{ $t('clearTopologyHistoryConfirm') }}</p>
+      <div class="flex justify-end gap-2">
+        <button
+          class="btn btn-sm"
+          @click="showClearDialog = false"
+        >
+          {{ $t('cancel') }}
+        </button>
+        <button
+          class="btn btn-error btn-sm"
+          @click="handleClearTopology"
+        >
+          {{ $t('confirm') }}
+        </button>
+      </div>
+    </div>
+  </DialogWrapper>
 </template>
 
 <script setup lang="ts">
+import DialogWrapper from '@/components/common/DialogWrapper.vue'
 import {
   TIME_RANGE_OPTIONS,
   filterConnectionsByTimeRange,
@@ -164,12 +193,13 @@ import {
   getTimeRangeMs,
   type TimeRangeValue,
 } from '@/composables/timeRange'
-import { backgroundImage } from '@/helper/indexeddb'
+import { backgroundImage, clearTopoFlowsFromIndexedDB } from '@/helper/indexeddb'
+import { showNotification } from '@/helper/notification'
 import { getIPDisplayLabel } from '@/helper/sourceip'
 import { useTooltip } from '@/helper/tooltip'
 import { isMiddleScreen, prettyBytesHelper } from '@/helper/utils'
 import { activeConnections, closedConnections } from '@/store/connections'
-import { topoFlowsData } from '@/store/connHistory'
+import { initTopoFlowsData, topoFlowsData, topoHistoryStartTime } from '@/store/connHistory'
 import { blurIntensity, dashboardTransparent, font, theme } from '@/store/settings'
 import {
   ArrowsPointingInIcon,
@@ -177,6 +207,7 @@ import {
   PauseCircleIcon,
   PlayCircleIcon,
   QuestionMarkCircleIcon,
+  TrashIcon,
 } from '@heroicons/vue/24/outline'
 import { useElementSize, useLocalStorage, useWindowSize } from '@vueuse/core'
 import { SankeyChart } from 'echarts/charts'
@@ -196,8 +227,8 @@ echarts.use([SankeyChart, GridComponent, LegendComponent, TooltipComponent, Canv
 
 const { t } = useI18n()
 const { showTip } = useTooltip()
-const startTime = useLocalStorage<number>('cache/connection-history-stats-start-time', Date.now())
 const isFullScreen = ref(false)
+const showClearDialog = ref(false)
 const isPaused = ref(false)
 const colorRef = ref()
 const chart = ref()
@@ -435,14 +466,27 @@ const sankeyData = computed(() => {
   return { nodes: sortedNodes, links }
 })
 
+const handleClearTopology = async () => {
+  try {
+    await clearTopoFlowsFromIndexedDB()
+    await initTopoFlowsData()
+    showClearDialog.value = false
+    showNotification({ content: t('clearTopologyHistorySuccess'), type: 'alert-success' })
+  } catch (error) {
+    console.error('Failed to clear topology history:', error)
+    showNotification({ content: `${t('saveFailed')}: ${error}`, type: 'alert-error' })
+  }
+}
+
 const chartTip = computed(() => {
   if (timeRange.value === 'all') {
-    const d = dayjs(startTime.value)
-    return t('connectionTopologyTip', {
-      note: t('chartTipAllHistory', {
-        time: `${d.format('YYYY-MM-DD HH:mm')} (${d.fromNow()})`,
-      }),
-    })
+    const note =
+      topoHistoryStartTime.value !== null
+        ? t('chartTipAllHistory', {
+            time: `${dayjs(topoHistoryStartTime.value).format('YYYY-MM-DD HH:mm')} (${dayjs(topoHistoryStartTime.value).fromNow()})`,
+          })
+        : t('chartTipAllHistoryUnknown')
+    return t('connectionTopologyTip', { note })
   }
   const connections = filterConnectionsByTimeRange(
     [...closedConnections.value, ...activeConnections.value],

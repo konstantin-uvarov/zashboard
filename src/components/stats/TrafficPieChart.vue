@@ -67,7 +67,12 @@ import { ConnectionHistoryType } from '@/helper/indexeddb'
 import { getIPDisplayLabel } from '@/helper/sourceip'
 import { useTooltip } from '@/helper/tooltip'
 import { prettyBytesHelper } from '@/helper/utils'
-import { aggregateConnections, aggregatedDataMap, mergeAggregatedData } from '@/store/connHistory'
+import {
+  aggregateConnections,
+  aggregatedDataMap,
+  historyStartTime,
+  mergeAggregatedData,
+} from '@/store/connHistory'
 import { activeConnections, closedConnections } from '@/store/connections'
 import { font, theme } from '@/store/settings'
 import { QuestionMarkCircleIcon } from '@heroicons/vue/24/outline'
@@ -88,7 +93,6 @@ dayjs.extend(relativeTime)
 
 const { t } = useI18n()
 const { showTip } = useTooltip()
-const startTime = useLocalStorage<number>('cache/connection-history-stats-start-time', Date.now())
 const BAR_HEIGHT = 28
 const CHART_MARGIN = 50
 
@@ -149,12 +153,13 @@ const chartHeight = computed(() =>
 
 const chartTip = computed(() => {
   if (timeRange.value === 'all') {
-    const d = dayjs(startTime.value)
-    return t('trafficDistributionTip', {
-      note: t('chartTipAllHistory', {
-        time: `${d.format('YYYY-MM-DD HH:mm')} (${d.fromNow()})`,
-      }),
-    })
+    const note =
+      historyStartTime.value !== null
+        ? t('chartTipAllHistory', {
+            time: `${dayjs(historyStartTime.value).format('YYYY-MM-DD HH:mm')} (${dayjs(historyStartTime.value).fromNow()})`,
+          })
+        : t('chartTipAllHistoryUnknown')
+    return t('trafficDistributionTip', { note })
   }
   const rangeMs = getTimeRangeMs(timeRange.value)
   const filtered = filterConnectionsByTimeRange(
@@ -176,7 +181,7 @@ const buildOptions = () => {
   }))
 
   return {
-    grid: { left: 8, right: 16, top: 8, bottom: 28, containLabel: true },
+    grid: { left: 8, right: 80, top: 8, bottom: 28, containLabel: true },
     tooltip: {
       trigger: 'axis',
       axisPointer: { type: 'shadow' },
@@ -220,6 +225,14 @@ const buildOptions = () => {
         data,
         barMaxWidth: 20,
         itemStyle: { borderRadius: [0, 3, 3, 0] },
+        label: {
+          show: true,
+          position: 'right',
+          color: colorSet.baseContent,
+          fontFamily,
+          formatter: (params: { value: number }) =>
+            prettyBytesHelper(params.value, { binary: false }),
+        },
       },
     ],
   }
