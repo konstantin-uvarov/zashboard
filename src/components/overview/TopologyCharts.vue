@@ -107,7 +107,7 @@
           :class="isFullScreen ? 'fixed right-4 bottom-4 mb-[env(safe-area-inset-bottom)]' : ''"
         >
           <button
-            class="btn btn-ghost btn-circle btn-sm"
+            class="btn btn-ghost btn-sm"
             @click="togglePause()"
           >
             <component
@@ -116,7 +116,7 @@
             />
           </button>
           <button
-            class="btn btn-ghost btn-circle btn-sm"
+            class="btn btn-ghost btn-sm"
             @click="isFullScreen = !isFullScreen"
           >
             <component
@@ -164,7 +164,7 @@
       </div>
       <div class="fixed right-4 bottom-4 mb-[env(safe-area-inset-bottom)] flex flex-col gap-1">
         <button
-          class="btn btn-ghost btn-circle btn-sm"
+          class="btn btn-ghost btn-sm"
           @click="togglePause()"
         >
           <component
@@ -173,7 +173,7 @@
           />
         </button>
         <button
-          class="btn btn-ghost btn-circle btn-sm"
+          class="btn btn-ghost btn-sm"
           @click="isFullScreen = false"
         >
           <ArrowsPointingInIcon class="h-4 w-4" />
