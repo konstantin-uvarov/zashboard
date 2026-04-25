@@ -128,13 +128,15 @@
         </div>
       </div>
     </div>
-    <TrafficPieChart
-      :time-range="timeRange"
-      :group-by="aggregationType"
-      :hide-small-values="hideSmallValues"
-      :hide-controls="true"
-      :max-items="50"
-    />
+    <div class="px-4 pb-2">
+      <TrafficPieChart
+        :time-range="timeRange"
+        :group-by="aggregationType"
+        :hide-small-values="hideSmallValues"
+        :hide-controls="true"
+        :max-items="50"
+      />
+    </div>
 
     <button
       class="flex w-full cursor-pointer items-center gap-1 px-4 pb-4 text-left text-sm opacity-60 hover:opacity-100"
