@@ -84,31 +84,46 @@
     </div>
     <div class="card-body need-blur gap-0! p-0!">
       <div class="px-4 py-4">
-        <div
-          class="stats stats-vertical sm:stats-horizontal bg-base-200 w-full gap-2 shadow max-md:grid max-md:grid-cols-2"
-        >
-          <div class="stat">
-            <div class="stat-title text-xs">{{ aggregateSourceLabel }}</div>
-            <div class="stat-value text-lg">{{ aggregateSourceCount }}</div>
+        <div class="grid grid-cols-2 gap-2 md:grid-cols-5">
+          <div class="bg-base-200/30 flex flex-col gap-1 rounded-xl p-3 lg:gap-1.5 lg:p-4">
+            <div class="text-base-content/60 text-xs font-semibold tracking-wider uppercase">
+              {{ aggregateSourceLabel }}
+            </div>
+            <div class="text-lg font-extralight tabular-nums lg:text-2xl">
+              {{ aggregateSourceCount }}
+            </div>
           </div>
-          <div class="stat md:hidden"></div>
-          <div class="stat">
-            <div class="stat-title text-xs">{{ t('download') }}</div>
-            <div class="stat-value text-lg">{{ prettyBytesHelper(totalStats.download) }}</div>
+          <div class="bg-base-200/30 flex flex-col gap-1 rounded-xl p-3 lg:gap-1.5 lg:p-4">
+            <div class="text-base-content/60 text-xs font-semibold tracking-wider uppercase">
+              {{ t('download') }}
+            </div>
+            <div class="text-lg font-extralight tabular-nums lg:text-2xl">
+              {{ prettyBytesHelper(totalStats.download) }}
+            </div>
           </div>
-          <div class="stat">
-            <div class="stat-title text-xs">{{ t('upload') }}</div>
-            <div class="stat-value text-lg">{{ prettyBytesHelper(totalStats.upload) }}</div>
+          <div class="bg-base-200/30 flex flex-col gap-1 rounded-xl p-3 lg:gap-1.5 lg:p-4">
+            <div class="text-base-content/60 text-xs font-semibold tracking-wider uppercase">
+              {{ t('upload') }}
+            </div>
+            <div class="text-lg font-extralight tabular-nums lg:text-2xl">
+              {{ prettyBytesHelper(totalStats.upload) }}
+            </div>
           </div>
-          <div class="stat">
-            <div class="stat-title text-xs">{{ t('totalTraffic') }}</div>
-            <div class="stat-value text-lg">
+          <div class="bg-base-200/30 flex flex-col gap-1 rounded-xl p-3 lg:gap-1.5 lg:p-4">
+            <div class="text-base-content/60 text-xs font-semibold tracking-wider uppercase">
+              {{ t('totalTraffic') }}
+            </div>
+            <div class="text-lg font-extralight tabular-nums lg:text-2xl">
               {{ prettyBytesHelper(totalStats.download + totalStats.upload) }}
             </div>
           </div>
-          <div class="stat">
-            <div class="stat-title text-xs">{{ t('connectionCount') }}</div>
-            <div class="stat-value text-lg">{{ totalStats.count.toString() }}</div>
+          <div class="bg-base-200/30 flex flex-col gap-1 rounded-xl p-3 lg:gap-1.5 lg:p-4">
+            <div class="text-base-content/60 text-xs font-semibold tracking-wider uppercase">
+              {{ t('connectionCount') }}
+            </div>
+            <div class="text-lg font-extralight tabular-nums lg:text-2xl">
+              {{ totalStats.count.toString() }}
+            </div>
           </div>
         </div>
       </div>
