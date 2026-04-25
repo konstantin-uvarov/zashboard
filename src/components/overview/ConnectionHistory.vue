@@ -7,16 +7,16 @@
             {{ $t('totalConnections') }}
           </span>
 
+          <QuestionMarkCircleIcon
+            class="h-4 w-4 cursor-pointer"
+            @mouseenter="showTip($event, totalConnectionsTip)"
+          />
           <button
             class="btn btn-sm"
             @click="showClearDialog = true"
           >
             <TrashIcon class="h-4 w-4" />
           </button>
-          <QuestionMarkCircleIcon
-            class="h-4 w-4 cursor-pointer"
-            @mouseenter="showTip($event, totalConnectionsTip)"
-          />
         </div>
 
         <div class="flex items-center gap-2 font-normal max-sm:flex-col max-sm:items-start">
