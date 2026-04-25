@@ -1,6 +1,6 @@
 <template>
   <div class="card pb-4">
-    <div class="absolute z-10 flex w-full items-center justify-between px-4 pt-4">
+    <div class="flex w-full items-center justify-between px-4 pt-4 pb-2">
       <div class="flex items-center gap-2">
         <span class="text-base-content/60 text-xs font-semibold tracking-wider uppercase">
           {{ $t('connectionTopology') }}
@@ -57,72 +57,74 @@
         </div>
       </div>
     </div>
-    <div
-      :class="twMerge('bg-base-200/30 relative w-full overflow-hidden rounded-xl pt-12')"
-      style="height: 576px"
-      @mousemove.stop
-      @touchmove.stop
-    >
+    <div class="px-4 pb-4">
       <div
-        ref="chart"
-        class="h-full w-full"
-      />
-      <span
-        class="border-base-content/30 text-base-content/10 bg-base-100/70 hidden"
-        ref="colorRef"
-      />
-      <div
-        v-for="overlay in nodeOverlays"
-        :key="overlay.id"
-        class="pointer-events-none absolute flex items-center justify-center overflow-hidden"
-        :style="{
-          left: `${overlay.x}px`,
-          top: `${overlay.y}px`,
-          width: `${overlay.w}px`,
-          height: `${overlay.h}px`,
-        }"
+        :class="twMerge('bg-base-200/30 relative w-full overflow-hidden rounded-xl')"
+        style="height: 576px"
+        @mousemove.stop
+        @touchmove.stop
       >
+        <div
+          ref="chart"
+          class="h-full w-full"
+        />
         <span
-          class="text-[9px] font-bold text-white/90 select-none"
-          style="
-            writing-mode: vertical-rl;
-            transform: rotate(180deg);
-            white-space: nowrap;
-            line-height: 1;
-          "
-          >{{ overlay.text }}</span
+          class="border-base-content/30 text-base-content/10 bg-base-100/70 hidden"
+          ref="colorRef"
+        />
+        <div
+          v-for="overlay in nodeOverlays"
+          :key="overlay.id"
+          class="pointer-events-none absolute flex items-center justify-center overflow-hidden"
+          :style="{
+            left: `${overlay.x}px`,
+            top: `${overlay.y}px`,
+            width: `${overlay.w}px`,
+            height: `${overlay.h}px`,
+          }"
         >
-      </div>
-      <div
-        v-if="sankeyData.nodes.length === 0"
-        class="text-base-content/50 absolute inset-0 flex items-center justify-center"
-      >
-        <div class="text-center">
-          <div>{{ t('noData') }}</div>
+          <span
+            class="text-[9px] font-bold text-white/90 select-none"
+            style="
+              writing-mode: vertical-rl;
+              transform: rotate(180deg);
+              white-space: nowrap;
+              line-height: 1;
+            "
+            >{{ overlay.text }}</span
+          >
         </div>
-      </div>
-      <div
-        class="absolute right-1 bottom-1 flex flex-col gap-1"
-        :class="isFullScreen ? 'fixed right-4 bottom-4 mb-[env(safe-area-inset-bottom)]' : ''"
-      >
-        <button
-          class="btn btn-ghost btn-circle btn-sm"
-          @click="togglePause()"
+        <div
+          v-if="sankeyData.nodes.length === 0"
+          class="text-base-content/50 absolute inset-0 flex items-center justify-center"
         >
-          <component
-            :is="!isPaused ? PauseCircleIcon : PlayCircleIcon"
-            class="h-4 w-4"
-          />
-        </button>
-        <button
-          class="btn btn-ghost btn-circle btn-sm"
-          @click="isFullScreen = !isFullScreen"
+          <div class="text-center">
+            <div>{{ t('noData') }}</div>
+          </div>
+        </div>
+        <div
+          class="absolute right-1 bottom-1 flex flex-col gap-1"
+          :class="isFullScreen ? 'fixed right-4 bottom-4 mb-[env(safe-area-inset-bottom)]' : ''"
         >
-          <component
-            :is="isFullScreen ? ArrowsPointingInIcon : ArrowsPointingOutIcon"
-            class="h-4 w-4"
-          />
-        </button>
+          <button
+            class="btn btn-ghost btn-circle btn-sm"
+            @click="togglePause()"
+          >
+            <component
+              :is="!isPaused ? PauseCircleIcon : PlayCircleIcon"
+              class="h-4 w-4"
+            />
+          </button>
+          <button
+            class="btn btn-ghost btn-circle btn-sm"
+            @click="isFullScreen = !isFullScreen"
+          >
+            <component
+              :is="isFullScreen ? ArrowsPointingInIcon : ArrowsPointingOutIcon"
+              class="h-4 w-4"
+            />
+          </button>
+        </div>
       </div>
     </div>
   </div>
