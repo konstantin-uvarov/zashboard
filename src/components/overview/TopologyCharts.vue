@@ -103,7 +103,7 @@
           </div>
         </div>
         <div
-          class="absolute right-1 bottom-1 flex flex-col gap-1"
+          class="absolute right-2 bottom-2 flex flex-col gap-1"
           :class="isFullScreen ? 'fixed right-4 bottom-4 mb-[env(safe-area-inset-bottom)]' : ''"
         >
           <button
