@@ -10,7 +10,7 @@
           @mouseenter="showTip($event, chartTip)"
         />
         <button
-          class="btn btn-circle btn-sm"
+          class="btn btn-sm"
           @click="showClearDialog = true"
         >
           <TrashIcon class="h-4 w-4" />
