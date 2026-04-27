@@ -1,6 +1,6 @@
 <template>
   <div class="flex w-full flex-col gap-2 p-2">
-    <ChartsCard />
+    <ChartsCard :show-stats="true" />
     <div class="card w-full">
       <div class="px-4 pt-4 pb-2">
         <span class="text-base-content/60 text-xs font-semibold tracking-wider uppercase">

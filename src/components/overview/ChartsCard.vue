@@ -10,6 +10,7 @@
       />
     </div>
     <StatisticsStats
+      v-if="showStats"
       type="overview"
       class="mb-3"
     />
@@ -104,6 +105,8 @@ import { QuestionMarkCircleIcon } from '@heroicons/vue/24/outline'
 import dayjs from 'dayjs'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+
+const { showStats = false } = defineProps<{ showStats?: boolean }>()
 
 const { showTip } = useTooltip()
 
