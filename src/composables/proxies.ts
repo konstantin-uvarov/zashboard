@@ -3,6 +3,7 @@ import { GLOBAL, PROXY_TAB_TYPE } from '@/constant'
 import { isHiddenGroup } from '@/helper'
 import { configs } from '@/store/config'
 import {
+  getProxyGroupChains,
   proxiesFilter,
   proxiesTabShow,
   proxyGroupList,
@@ -48,9 +49,10 @@ const getRenderGroups = () => {
 
   if (displayGlobalByMode.value) {
     if (configs.value?.mode.toUpperCase() === GLOBAL) {
-      return [
-        isSingBox.value && proxyMap.value[customGlobalNode.value] ? customGlobalNode.value : GLOBAL,
-      ].filter(matchProxyGroupFilter)
+      const globalName =
+        isSingBox.value && proxyMap.value[customGlobalNode.value] ? customGlobalNode.value : GLOBAL
+
+      return getProxyGroupChains(globalName).filter(matchProxyGroupFilter)
     }
 
     return filterGroups(proxyGroupList.value)
