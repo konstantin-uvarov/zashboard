@@ -1,22 +1,31 @@
 <template>
-  <div class="bg-base-200/30 relative h-64 w-full overflow-hidden rounded-xl">
-    <div
-      ref="chartEl"
-      class="h-full w-full"
-    />
-    <span
-      class="text-base-content/10 bg-base-100/70 hidden"
-      ref="colorRef"
-    />
-    <button
-      class="btn btn-ghost btn-xs absolute top-2 right-2"
-      @click="isPaused = !isPaused"
-    >
-      <component
-        :is="!isPaused ? PauseCircleIcon : PlayCircleIcon"
-        class="h-4 w-4"
-      />
-    </button>
+  <div class="card w-full">
+    <div class="px-4 pt-4 pb-2">
+      <span class="text-base-content/60 text-xs font-semibold tracking-wider uppercase">
+        {{ $t('deviceSpeedChart') }}
+      </span>
+    </div>
+    <div class="card-body pt-0">
+      <div class="bg-base-200/30 relative h-64 w-full overflow-hidden rounded-xl">
+        <div
+          ref="chartEl"
+          class="h-full w-full"
+        />
+        <span
+          class="text-base-content/10 bg-base-100/70 hidden"
+          ref="colorRef"
+        />
+        <button
+          class="btn btn-ghost btn-xs absolute top-2 right-2"
+          @click="isPaused = !isPaused"
+        >
+          <component
+            :is="!isPaused ? PauseCircleIcon : PlayCircleIcon"
+            class="h-4 w-4"
+          />
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 

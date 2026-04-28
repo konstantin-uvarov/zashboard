@@ -11,7 +11,6 @@ import ProxiesPage from '@/views/ProxiesPage.vue'
 import RulesPage from '@/views/RulesPage.vue'
 import SettingsPage from '@/views/SettingsPage.vue'
 import SetupPage from '@/views/SetupPage.vue'
-import StatsPage from '@/views/StatsPage.vue'
 import { useTitle } from '@vueuse/core'
 import { watch } from 'vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
@@ -44,8 +43,7 @@ const childrenRouter = [
   },
   {
     path: 'stats',
-    name: ROUTE_NAME.stats,
-    component: StatsPage,
+    redirect: { name: ROUTE_NAME.overview },
   },
   {
     path: 'settings',

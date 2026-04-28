@@ -42,6 +42,7 @@ const isOpen = defineModel<boolean>({ required: true })
 
 const cardKeyToLabelMap: Record<string, string> = {
   ChartsCard: 'chartsCard',
+  DeviceSpeedCharts: 'deviceSpeedChart',
   NetworkCard: 'networkCard',
   ProviderTrafficOverview: 'providerTrafficOverview',
   TopologyCharts: 'topologyCharts',

@@ -9,6 +9,7 @@
         v-for="item in visibleCards"
         :key="item"
         :is="cardComponents[item.card]"
+        v-bind="item.card === 'ChartsCard' ? { showStats: true } : {}"
       />
     </div>
   </div>
@@ -22,6 +23,7 @@ import NetworkCard from '@/components/overview/NetworkCard.vue'
 import ProviderTrafficOverview from '@/components/overview/ProviderTrafficOverview.vue'
 import RuleHitCountCard from '@/components/overview/RuleHitCountCard.vue'
 import TopologyCharts from '@/components/overview/TopologyCharts.vue'
+import DeviceSpeedCharts from '@/components/stats/DeviceSpeedCharts.vue'
 import { usePaddingForViews } from '@/composables/paddingViews'
 import { overviewCardOrder } from '@/store/settings'
 import type { Component } from 'vue'
@@ -37,6 +39,7 @@ const visibleCards = computed(() => {
 
 const cardComponents: Record<string, Component> = {
   ChartsCard,
+  DeviceSpeedCharts,
   NetworkCard,
   ProviderTrafficOverview,
   TopologyCharts,

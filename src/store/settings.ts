@@ -173,11 +173,7 @@ const defaultOverviewCardOrder: { card: OVERVIEW_CARD; visible: boolean }[] = [
     visible: true,
   },
   {
-    card: OVERVIEW_CARD.TopologyCharts,
-    visible: true,
-  },
-  {
-    card: OVERVIEW_CARD.ProviderTrafficOverview,
+    card: OVERVIEW_CARD.DeviceSpeedCharts,
     visible: true,
   },
   {
@@ -185,7 +181,15 @@ const defaultOverviewCardOrder: { card: OVERVIEW_CARD; visible: boolean }[] = [
     visible: true,
   },
   {
+    card: OVERVIEW_CARD.TopologyCharts,
+    visible: true,
+  },
+  {
     card: OVERVIEW_CARD.RuleHitCountCard,
+    visible: true,
+  },
+  {
+    card: OVERVIEW_CARD.ProviderTrafficOverview,
     visible: true,
   },
 ]
