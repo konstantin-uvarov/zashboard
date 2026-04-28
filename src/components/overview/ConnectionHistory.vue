@@ -67,15 +67,15 @@
               v-model="autoCleanupInterval"
               class="select select-bordered select-sm w-28"
             >
-              <option :value="AutoCleanupInterval.Never">
-                {{ $t('autoCleanupIntervalNever') }}
-              </option>
               <option :value="AutoCleanupInterval.Week">{{ $t('autoCleanupIntervalWeek') }}</option>
               <option :value="AutoCleanupInterval.Month">
                 {{ $t('autoCleanupIntervalMonth') }}
               </option>
               <option :value="AutoCleanupInterval.Quarter">
                 {{ $t('autoCleanupIntervalQuarter') }}
+              </option>
+              <option :value="AutoCleanupInterval.Year">
+                {{ $t('autoCleanupIntervalYear') }}
               </option>
             </select>
           </div>
@@ -247,6 +247,7 @@ import {
   getTimeRangeMs,
   type TimeRangeValue,
 } from '@/composables/timeRange'
+import { clearAllConnBuckets } from '@/helper/bucketStorage'
 import { ConnectionHistoryType, clearConnectionHistoryFromIndexedDB } from '@/helper/indexeddb'
 import { showNotification } from '@/helper/notification'
 import { getIPDisplayLabel } from '@/helper/sourceip'
@@ -291,10 +292,10 @@ const { showTip } = useTooltip()
 const SMALL_VALUE_THRESHOLD = 10 * 1024 * 1024
 
 enum AutoCleanupInterval {
-  Never = 'never',
   Week = 'week',
   Month = 'month',
   Quarter = 'quarter',
+  Year = 'year',
 }
 
 interface ConnectionHistoryData {
@@ -463,7 +464,7 @@ const rows = computed(() => {
 const showClearDialog = ref(false)
 const autoCleanupInterval = useStorage<AutoCleanupInterval>(
   'config/connection-history-auto-cleanup-interval',
-  AutoCleanupInterval.Month,
+  AutoCleanupInterval.Year,
 )
 const totalConnectionsTip = computed(() => {
   const baseTip =
@@ -492,16 +493,13 @@ const getCleanupIntervalMs = (interval: AutoCleanupInterval): number => {
       return 30 * 24 * 60 * 60 * 1000
     case AutoCleanupInterval.Quarter:
       return 90 * 24 * 60 * 60 * 1000
-    case AutoCleanupInterval.Never:
+    case AutoCleanupInterval.Year:
     default:
-      return 0
+      return 365 * 24 * 60 * 60 * 1000
   }
 }
 
 const checkAndPerformAutoCleanup = async () => {
-  if (autoCleanupInterval.value === AutoCleanupInterval.Never) {
-    return
-  }
   if (historyStartTime.value === null) {
     return // legacy data with unknown start time — skip auto-cleanup
   }
@@ -523,6 +521,7 @@ const checkAndPerformAutoCleanup = async () => {
 const handleClearHistory = async () => {
   try {
     await clearConnectionHistoryFromIndexedDB()
+    await clearAllConnBuckets()
     initAggregatedDataMap()
     showClearDialog.value = false
     showNotification({

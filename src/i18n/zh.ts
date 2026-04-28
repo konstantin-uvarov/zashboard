@@ -334,7 +334,7 @@ const zh: LANG_MESSAGE = {
   autoCleanupIntervalWeek: '每周',
   autoCleanupIntervalMonth: '每月',
   autoCleanupIntervalQuarter: '每季度',
-  autoCleanupIntervalNever: '永不',
+  autoCleanupIntervalYear: '每年',
   remainingTraffic: '剩余流量',
   ruleHitCount: '命中: {count} 次',
   ruleLastHit: '最后命中: {time}',

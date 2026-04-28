@@ -82,8 +82,11 @@ import {
   filterConnectionsByTimeRange,
   getOldestConnectionTime,
   getTimeRangeMs,
+  isBucketRange,
   type TimeRangeValue,
 } from '@/composables/timeRange'
+import { readBuckets } from '@/helper/bucketStorage'
+import type { ConnectionHistoryData } from '@/helper/indexeddb'
 import { ConnectionHistoryType } from '@/helper/indexeddb'
 import { getIPDisplayLabel } from '@/helper/sourceip'
 import { useTooltip } from '@/helper/tooltip'
@@ -91,6 +94,7 @@ import { prettyBytesHelper } from '@/helper/utils'
 import {
   aggregateConnections,
   aggregatedDataMap,
+  getActiveUuid,
   historyStartTime,
   mergeAggregatedData,
 } from '@/store/connHistory'
@@ -103,7 +107,7 @@ import { GridComponent, TooltipComponent } from 'echarts/components'
 import * as echarts from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { debounce } from 'lodash'
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch, watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer])
@@ -147,6 +151,20 @@ const internalTimeRange = useLocalStorage<TimeRangeValue>('stats-pie-timerange',
 const activeTimeRange = computed(() => props.timeRange ?? internalTimeRange.value)
 const activeGroupBy = computed(() => props.groupBy ?? internalGroupBy.value)
 
+const bucketChartData = ref<ConnectionHistoryData[]>([])
+
+watchEffect(async () => {
+  const range = activeTimeRange.value
+  const groupBy = activeGroupBy.value
+  if (!isBucketRange(range)) {
+    bucketChartData.value = []
+    return
+  }
+  const rangeMs = getTimeRangeMs(range)!
+  const toMs = Date.now()
+  bucketChartData.value = await readBuckets(getActiveUuid(), groupBy, toMs - rangeMs, toMs)
+})
+
 const colorSet = {
   baseContent: '',
   base70: '',
@@ -166,10 +184,13 @@ const updateFontFamily = () => {
 }
 
 const allChartData = computed(() => {
-  let entries
+  let entries: ConnectionHistoryData[]
   if (activeTimeRange.value === 'all') {
     entries = aggregatedDataMap.value[activeGroupBy.value] ?? []
+  } else if (isBucketRange(activeTimeRange.value)) {
+    entries = bucketChartData.value
   } else {
+    // session / 5m / 30m / 6h / 1d — filter in-memory connections
     const rangeMs = getTimeRangeMs(activeTimeRange.value)
     const filtered = filterConnectionsByTimeRange(
       [...closedConnections.value, ...activeConnections.value],

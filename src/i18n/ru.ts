@@ -343,7 +343,7 @@ const ru: LANG_MESSAGE = {
   autoCleanupIntervalWeek: 'Еженедельно',
   autoCleanupIntervalMonth: 'Ежемесячно',
   autoCleanupIntervalQuarter: 'Ежеквартально',
-  autoCleanupIntervalNever: 'Никогда',
+  autoCleanupIntervalYear: 'Ежегодно',
   remainingTraffic: 'Осталось',
   ruleHitCount: 'Попадание: {count} раз',
   ruleLastHit: 'Последнее попадание: {time}',

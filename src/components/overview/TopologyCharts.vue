@@ -212,15 +212,23 @@ import {
   filterConnectionsByTimeRange,
   getOldestConnectionTime,
   getTimeRangeMs,
+  isBucketRange,
   type TimeRangeValue,
 } from '@/composables/timeRange'
+import { clearAllTopoBuckets, readTopoBuckets } from '@/helper/bucketStorage'
+import type { TopoFlowData } from '@/helper/indexeddb'
 import { backgroundImage, clearTopoFlowsFromIndexedDB } from '@/helper/indexeddb'
 import { showNotification } from '@/helper/notification'
 import { getIPDisplayLabel } from '@/helper/sourceip'
 import { useTooltip } from '@/helper/tooltip'
 import { isMiddleScreen, prettyBytesHelper } from '@/helper/utils'
 import { activeConnections, closedConnections } from '@/store/connections'
-import { initTopoFlowsData, topoFlowsData, topoHistoryStartTime } from '@/store/connHistory'
+import {
+  getActiveUuid,
+  initTopoFlowsData,
+  topoFlowsData,
+  topoHistoryStartTime,
+} from '@/store/connHistory'
 import { rules } from '@/store/rules'
 import { blurIntensity, dashboardTransparent, font, theme } from '@/store/settings'
 import {
@@ -238,7 +246,7 @@ import * as echarts from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { debounce } from 'lodash'
 import { twMerge } from 'tailwind-merge'
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch, watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import dayjs from 'dayjs'
@@ -288,6 +296,19 @@ const metric = useLocalStorage<'download' | 'upload' | 'total' | 'count'>(
   'download',
 )
 const scaleMode = useLocalStorage<'log' | 'sqrt' | 'linear'>('stats-topology-scale', 'linear')
+
+const bucketTopoData = ref<TopoFlowData[]>([])
+
+watchEffect(async () => {
+  const range = timeRange.value
+  if (!isBucketRange(range)) {
+    bucketTopoData.value = []
+    return
+  }
+  const rangeMs = getTimeRangeMs(range)!
+  const toMs = Date.now()
+  bucketTopoData.value = await readTopoBuckets(getActiveUuid(), toMs - rangeMs, toMs)
+})
 
 const shouldRotate = computed(() => {
   return isFullScreen.value && isMiddleScreen.value && windowHeight.value > windowWidth.value
@@ -415,7 +436,20 @@ const sankeyData = computed(() => {
         conn.upload ?? 0,
       )
     })
+  } else if (isBucketRange(timeRange.value)) {
+    bucketTopoData.value.forEach((flow) => {
+      addFlow(
+        getIPDisplayLabel(flow.sourceIP),
+        flow.ruleKey,
+        flow.chainLast,
+        flow.chainFirst,
+        flow.count,
+        flow.download,
+        flow.upload,
+      )
+    })
   } else {
+    // session / 5m / 30m / 6h / 1d — filter in-memory connections
     const rangeMs = getTimeRangeMs(timeRange.value)
     const connections = filterConnectionsByTimeRange(
       [...closedConnections.value, ...activeConnections.value],
@@ -528,7 +562,9 @@ const sankeyData = computed(() => {
 const handleClearTopology = async () => {
   try {
     await clearTopoFlowsFromIndexedDB()
+    await clearAllTopoBuckets()
     await initTopoFlowsData()
+    bucketTopoData.value = []
     showClearDialog.value = false
     showNotification({ content: t('clearTopologyHistorySuccess'), type: 'alert-success' })
   } catch (error) {

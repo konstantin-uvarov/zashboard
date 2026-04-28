@@ -1,5 +1,11 @@
 import { getProcessFromConnection } from '@/helper'
 import {
+  pruneOldBuckets,
+  pruneOldTopoBuckets,
+  writeDailyBucket,
+  writeDailyTopoBucket,
+} from '@/helper/bucketStorage'
+import {
   ConnectionHistoryType,
   getConnectionHistoryFromIndexedDB,
   getConnectionHistoryStartTime,
@@ -23,6 +29,22 @@ const isInitializedPromise = ref(
   }),
 )
 const uuid = () => activeBackend.value?.uuid || ''
+
+export const getActiveUuid = () => uuid()
+
+const getRetentionDays = (): number => {
+  const val = localStorage.getItem('config/connection-history-auto-cleanup-interval')
+  switch (val) {
+    case 'week':
+      return 7
+    case 'month':
+      return 30
+    case 'quarter':
+      return 90
+    default:
+      return 365
+  }
+}
 const allHistoryTypes = [
   ConnectionHistoryType.SourceIP,
   ConnectionHistoryType.Destination,
@@ -233,6 +255,7 @@ export const saveConnectionHistory = async (newClosedConnections: Connection[]) 
 
       aggregatedDataMap.value[type] = mergedData
       await saveConnectionHistoryToIndexedDB(uuid(), type, mergedData)
+      await writeDailyBucket(uuid(), type, newAggregatedData)
     } catch (error) {
       console.error(`Failed to save connection history for ${type}:`, error)
     }
@@ -243,7 +266,12 @@ export const saveConnectionHistory = async (newClosedConnections: Connection[]) 
     const merged = mergeTopoFlows(topoFlowsData.value, newFlows)
     topoFlowsData.value = merged
     await saveTopoFlowsToIndexedDB(uuid(), merged)
+    await writeDailyTopoBucket(uuid(), newFlows)
   } catch (error) {
     console.error('Failed to save topology flows:', error)
   }
+
+  const retentionDays = getRetentionDays()
+  pruneOldBuckets(uuid(), retentionDays).catch(() => {})
+  pruneOldTopoBuckets(uuid(), retentionDays).catch(() => {})
 }

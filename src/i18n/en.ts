@@ -341,7 +341,7 @@ const en = {
   autoCleanupIntervalWeek: 'Weekly',
   autoCleanupIntervalMonth: 'Monthly',
   autoCleanupIntervalQuarter: 'Quarterly',
-  autoCleanupIntervalNever: 'Never',
+  autoCleanupIntervalYear: 'Yearly',
   remainingTraffic: 'Remaining',
   ruleHitCount: 'Hit: {count} times',
   ruleLastHit: 'Last hit: {time}',
