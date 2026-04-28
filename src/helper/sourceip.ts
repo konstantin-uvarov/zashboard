@@ -1,4 +1,3 @@
-import { DHCP_LABELS } from '@/helper/dhcpLabels'
 import { sourceIPLabelList } from '@/store/settings'
 import { activeBackend } from '@/store/setup'
 import * as ipaddr from 'ipaddr.js'
@@ -91,11 +90,6 @@ export const getIPLabelFromMap = (ip: string) => {
     if (addr.match(cidr)) {
       return cacheResult(ip, label)
     }
-  }
-
-  // Fall back to static DHCP map
-  if (DHCP_LABELS[ip]) {
-    return cacheResult(ip, DHCP_LABELS[ip])
   }
 
   return cacheResult(ip, ip)
