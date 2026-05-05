@@ -1,7 +1,7 @@
-import { fetchRuleProvidersAPI, fetchRulesAPI, fetchRulesCgiAPI, isSingBox } from '@/api'
+import { fetchRuleProvidersAPI, fetchRulesAPI, fetchRulesCgiAPI, isSingBox, version } from '@/api'
 import { RULE_TAB_TYPE } from '@/constant'
 import type { Rule, RuleProvider } from '@/types'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 export const rulesFilter = ref('')
 export const rulesTabShow = ref(RULE_TAB_TYPE.RULES)
@@ -46,7 +46,30 @@ export const renderRulesProvider = computed(() => {
   })
 })
 
+// Wait for the backend version to load. isSingBox is derived from version.value,
+// and on a hard refresh fetchRules can run before the version watcher resolves —
+// taking the Clash path for sing-box backends, whose /rules has no uuids and
+// hides every toggle switch.
+const waitForVersion = () =>
+  new Promise<void>((resolve) => {
+    if (version.value !== undefined) return resolve()
+    let stop: (() => void) | null = null
+    const timer = setTimeout(() => {
+      stop?.()
+      resolve()
+    }, 5000)
+    stop = watch(version, (v) => {
+      if (v !== undefined) {
+        clearTimeout(timer)
+        stop?.()
+        resolve()
+      }
+    })
+  })
+
 export const fetchRules = async () => {
+  await waitForVersion()
+
   let ruleList: Rule[]
   if (isSingBox.value) {
     try {
