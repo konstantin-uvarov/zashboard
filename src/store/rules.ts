@@ -46,10 +46,10 @@ export const renderRulesProvider = computed(() => {
   })
 })
 
-// Wait for the backend version to load. isSingBox is derived from version.value,
-// and on a hard refresh fetchRules can run before the version watcher resolves —
-// taking the Clash path for sing-box backends, whose /rules has no uuids and
-// hides every toggle switch.
+// Wait for the backend version to load before deciding the API path.
+// On a hard refresh fetchRules can run before the version watcher resolves;
+// without this wait isSingBox stays false, sing-box rules come back from the
+// Clash path without UUIDs, and RuleCard hides every toggle switch.
 const waitForVersion = () =>
   new Promise<void>((resolve) => {
     if (version.value !== undefined) return resolve()
