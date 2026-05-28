@@ -19,7 +19,7 @@
           class="flex flex-1 flex-col gap-3"
         >
           <component
-            v-for="name in filterContent(renderGroups, idx)"
+            v-for="name in filterContent(renderPageItems, idx)"
             :is="renderComponent"
             :key="name"
             :name="name"
@@ -32,7 +32,7 @@
       v-else
     >
       <component
-        v-for="name in renderGroups"
+        v-for="name in renderPageItems"
         :is="renderComponent"
         :key="name"
         :name="name"
@@ -47,7 +47,11 @@ import ProxyGroup from '@/components/proxies/ProxyGroup.vue'
 import ProxyGroupForMobile from '@/components/proxies/ProxyGroupForMobile.vue'
 import ProxyProvider from '@/components/proxies/ProxyProvider.vue'
 import { usePaddingForViews } from '@/composables/paddingViews'
-import { disableProxiesPageScroll, isProxiesPageMounted, renderGroups } from '@/composables/proxies'
+import {
+  disableProxiesPageScroll,
+  isProxiesPageMounted,
+  renderProxiesPageItems,
+} from '@/composables/proxies'
 import { PROXY_TAB_TYPE } from '@/constant'
 import { isMiddleScreen, PROXIES_PAGE } from '@/helper/utils'
 import { fetchProxies, proxiesTabShow } from '@/store/proxies'
@@ -59,6 +63,7 @@ const { padding } = usePaddingForViews({
   offsetTop: 0,
   offsetBottom: 0,
 })
+const renderPageItems = renderProxiesPageItems
 const proxiesRef = ref()
 const scrollStatus = useSessionStorage('cache/proxies-scroll-status', {
   [PROXY_TAB_TYPE.PROVIDER]: 0,
@@ -124,7 +129,7 @@ const displayTwoColumns = computed(() => {
   if (proxiesTabShow.value === PROXY_TAB_TYPE.PROVIDER && isMiddleScreen.value) {
     return false
   }
-  return twoColumnProxyGroup.value && renderGroups.value.length > 1
+  return twoColumnProxyGroup.value && renderPageItems.value.length > 1
 })
 
 const filterContent: <T>(all: T[], target: number) => T[] = (all, target) => {

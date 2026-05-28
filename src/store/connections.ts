@@ -1,6 +1,7 @@
 import { disconnectByIdAPI, fetchConnectionsAPI } from '@/api'
 import { CONNECTION_TAB_TYPE, SORT_DIRECTION, SORT_TYPE } from '@/constant'
 import { getChainsStringFromConnection, getInboundUserFromConnection } from '@/helper'
+import { toSearchRegex } from '@/helper/search'
 import type { Connection, ConnectionRawMessage } from '@/types'
 import { useStorage, watchOnce } from '@vueuse/core'
 import dayjs from 'dayjs'
@@ -167,13 +168,8 @@ export const connections = computed(() => {
 })
 
 export const renderConnections = computed(() => {
-  const lowerCaseFilter = connectionFilter.value.split(' ').map((f) => f.toLowerCase().trim())
-
-  let regex: RegExp | null = null
-
-  if (quickFilterEnabled.value && quickFilterRegex.value) {
-    regex = new RegExp(quickFilterRegex.value, 'i')
-  }
+  const searchRegex = toSearchRegex(connectionFilter.value)
+  const hideRegex = quickFilterEnabled.value ? toSearchRegex(quickFilterRegex.value) : null
 
   return connections.value
     .filter((conn) => {
@@ -203,16 +199,16 @@ export const renderConnections = computed(() => {
         return false
       }
 
-      if (regex) {
-        const quickFilterMatch = metadatas.some((i) => regex.test(i))
+      if (hideRegex) {
+        const quickFilterMatch = metadatas.some((i) => hideRegex.test(i))
 
         if (quickFilterMatch) {
           return false
         }
       }
 
-      if (connectionFilter.value) {
-        return lowerCaseFilter.every((i) => metadatas.some((j) => j?.toLowerCase().includes(i)))
+      if (searchRegex) {
+        return metadatas.some((metadata) => searchRegex.test(metadata))
       }
 
       return true

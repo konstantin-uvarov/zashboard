@@ -1,5 +1,6 @@
 import { disconnectByIdAPI, isSingBox, updateProxyProviderAPI } from '@/api'
-import { renderGroups } from '@/composables/proxies'
+import { renderProxiesPageItems } from '@/composables/proxies'
+import { isProxyNodeSearchMode, toggleProxySearchMode } from '@/composables/proxySearch'
 import { useCtrlsBar } from '@/composables/useCtrlsBar'
 import { PROXY_SORT_TYPE, PROXY_TAB_TYPE, ROUTE_NAME, SETTINGS_MENU_KEY } from '@/constant'
 import { getMinCardWidth } from '@/helper/utils'
@@ -33,6 +34,8 @@ import {
   BoltIcon,
   ChevronDownIcon,
   ChevronUpIcon,
+  GlobeAltIcon,
+  RectangleGroupIcon,
   WrenchScrewdriverIcon,
 } from '@heroicons/vue/24/outline'
 import { every } from 'lodash'
@@ -103,12 +106,12 @@ export default defineComponent({
     }
 
     const hasNotCollapsed = computed(() => {
-      return renderGroups.value.some((name) => collapseGroupMap.value[name])
+      return renderProxiesPageItems.value.some((name) => collapseGroupMap.value[name])
     })
 
     const handlerClickToggleCollapse = () => {
       collapseGroupMap.value = Object.fromEntries(
-        renderGroups.value.map((name) => [name, !hasNotCollapsed.value]),
+        renderProxiesPageItems.value.map((name) => [name, !hasNotCollapsed.value]),
       )
     }
 
@@ -222,17 +225,31 @@ export default defineComponent({
         </button>
       )
 
-      const searchPlaceholder =
-        proxiesTabShow.value === PROXY_TAB_TYPE.PROVIDER
-          ? `${t('searchProxyNode')} | Regex`
-          : `${t('searchProxyGroup')} | Regex`
+      const searchPlaceholder = isProxyNodeSearchMode.value
+        ? `${t('searchProxyNode')} | Regex`
+        : `${t('searchProxyGroup')} | Regex`
       const searchInput = (
-        <TextInput
-          class={['w-32 flex-1', isLargeCtrlsBar.value && 'max-w-80']}
-          v-model={proxiesFilter.value}
-          placeholder={searchPlaceholder}
-          clearable={true}
-        />
+        <div class={['relative w-32 flex-1', isLargeCtrlsBar.value && 'max-w-80']}>
+          <button
+            class="btn btn-circle btn-ghost btn-xs absolute top-1/2 left-1 z-20 h-6 min-h-6 w-6 -translate-y-1/2 p-0"
+            title={
+              isProxyNodeSearchMode.value ? t('proxySearchModeGlobal') : t('proxySearchModeGroup')
+            }
+            onClick={toggleProxySearchMode}
+          >
+            {isProxyNodeSearchMode.value ? (
+              <GlobeAltIcon class="h-3.5 w-3.5" />
+            ) : (
+              <RectangleGroupIcon class="h-3.5 w-3.5" />
+            )}
+          </button>
+          <TextInput
+            v-model={proxiesFilter.value}
+            placeholder={searchPlaceholder}
+            clearable={true}
+            inputClass="pl-7"
+          />
+        </div>
       )
 
       const settingsModal = (

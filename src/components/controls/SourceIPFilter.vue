@@ -53,28 +53,28 @@ watch(
   sourceIPs,
   (value, oldValue) => {
     if (isEqual(value, oldValue)) return
-    sourceIPOpts.value = []
+    const options: { label: string; value: string[] }[] = []
 
-    sourceIPs.value.forEach((ip) => {
+    value.forEach((ip) => {
       const label = getIPDisplayLabel(ip)
-      const index = sourceIPOpts.value.findIndex((opt) => opt.label === label)
+      const index = options.findIndex((opt) => opt.label === label)
 
       if (index === -1) {
-        sourceIPOpts.value.push({
+        options.push({
           label,
           value: [ip],
         })
       } else {
-        sourceIPOpts.value[index].value.push(ip)
+        options[index].value.push(ip)
       }
     })
 
     if (sourceIPFilter.value !== null) {
       const currentLabel = getIPDisplayLabel(sourceIPFilter.value[0])
-      const current = sourceIPOpts.value.find((opt) => opt.label === currentLabel)
+      const current = options.find((opt) => opt.label === currentLabel)
 
       if (!current) {
-        sourceIPOpts.value.unshift({
+        options.unshift({
           label: currentLabel,
           value: sourceIPFilter.value,
         })
@@ -82,6 +82,8 @@ watch(
         sourceIPFilter.value = current.value
       }
     }
+
+    sourceIPOpts.value = options
   },
   {
     immediate: true,
