@@ -97,7 +97,7 @@
 <script setup lang="ts">
 import { useBounceOnVisible } from '@/composables/bouncein'
 import { disableProxiesPageScroll } from '@/composables/proxies'
-import { useRenderProxies } from '@/composables/renderProxies'
+import { useRenderProxyList } from '@/composables/renderProxies'
 import { isHiddenGroup } from '@/helper'
 import { PROXIES_PARENT_CLASS } from '@/helper/utils'
 import { hiddenGroupMap, proxyGroupLatencyTest, proxyMap } from '@/store/proxies'
@@ -118,7 +118,7 @@ const props = defineProps<{
 }>()
 const proxyGroup = computed(() => proxyMap.value[props.name])
 const allProxies = computed(() => proxyGroup.value.all ?? [])
-const { proxiesCount, renderProxies } = useRenderProxies(allProxies, props.name)
+const { proxiesCount, renderProxies } = useRenderProxyList(allProxies, props.name)
 const isLatencyTesting = ref(false)
 
 const modalMode = ref(false)

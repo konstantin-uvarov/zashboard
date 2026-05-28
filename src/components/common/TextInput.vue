@@ -11,7 +11,7 @@
       v-model="inputValue"
       ref="inputRef"
       type="text"
-      :class="['input input-sm join-item w-full', { 'pr-6': clearable }]"
+      :class="['input input-sm join-item w-full', inputClass, { 'pr-6': clearable }]"
       :placeholder="placeholder || ''"
       :name="name || ''"
       :autocomplete="autocomplete || ''"
@@ -46,6 +46,7 @@ const props = defineProps<{
   name?: string
   autocomplete?: string
   clearable?: boolean
+  inputClass?: string
   menus?: string[]
   menusDeleteable?: boolean
 }>()

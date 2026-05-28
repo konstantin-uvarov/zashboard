@@ -70,7 +70,7 @@
 <script setup lang="ts">
 import { proxyProviderHealthCheckAPI, updateProxyProviderAPI } from '@/api'
 import { useBounceOnVisible } from '@/composables/bouncein'
-import { useRenderProxies } from '@/composables/renderProxies'
+import { useRenderProxyList } from '@/composables/renderProxies'
 import { fromNow, prettyBytesHelper } from '@/helper/utils'
 import { fetchProxies, proxyProviederList } from '@/store/proxies'
 import { ArrowPathIcon, BoltIcon } from '@heroicons/vue/24/outline'
@@ -91,7 +91,7 @@ const proxyProvider = computed(
   () => proxyProviederList.value.find((group) => group.name === props.name)!,
 )
 const allProxies = computed(() => proxyProvider.value.proxies.map((node) => node.name) ?? [])
-const { renderProxies, proxiesCount } = useRenderProxies(allProxies)
+const { renderProxies, proxiesCount } = useRenderProxyList(allProxies)
 
 const subscriptionInfo = computed(() => {
   const info = proxyProvider.value.subscriptionInfo
