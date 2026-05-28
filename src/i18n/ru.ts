@@ -368,6 +368,7 @@ const ru: LANG_MESSAGE = {
     'Суммарный трафик с момента последнего перезапуска ядра. Время перезапуска недоступно через API.',
   stats: 'Статистика',
   deviceSpeedChart: 'Скорость по устройствам',
+  deviceCumulativeSpeedChart: 'Трафик по устройствам',
   trafficPieChart: 'Распределение трафика',
   timeRange: 'Период',
   allData: 'Все данные',
