@@ -287,6 +287,7 @@ export enum SETTINGS_MENU_KEY {
 export enum OVERVIEW_CARD {
   ChartsCard = 'ChartsCard',
   DeviceSpeedCharts = 'DeviceSpeedCharts',
+  DeviceCumulativeSpeedCharts = 'DeviceCumulativeSpeedCharts',
   NetworkCard = 'NetworkCard',
   ProviderTrafficOverview = 'ProviderTrafficOverview',
   TopologyCharts = 'TopologyCharts',

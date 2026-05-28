@@ -23,6 +23,7 @@ import NetworkCard from '@/components/overview/NetworkCard.vue'
 import ProviderTrafficOverview from '@/components/overview/ProviderTrafficOverview.vue'
 import RuleHitCountCard from '@/components/overview/RuleHitCountCard.vue'
 import TopologyCharts from '@/components/overview/TopologyCharts.vue'
+import DeviceCumulativeSpeedCharts from '@/components/stats/DeviceCumulativeSpeedCharts.vue'
 import DeviceSpeedCharts from '@/components/stats/DeviceSpeedCharts.vue'
 import { usePaddingForViews } from '@/composables/paddingViews'
 import { overviewCardOrder } from '@/store/settings'
@@ -40,6 +41,7 @@ const visibleCards = computed(() => {
 const cardComponents: Record<string, Component> = {
   ChartsCard,
   DeviceSpeedCharts,
+  DeviceCumulativeSpeedCharts,
   NetworkCard,
   ProviderTrafficOverview,
   TopologyCharts,

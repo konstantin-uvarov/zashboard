@@ -179,6 +179,10 @@ const defaultOverviewCardOrder: { card: OVERVIEW_CARD; visible: boolean }[] = [
     visible: true,
   },
   {
+    card: OVERVIEW_CARD.DeviceCumulativeSpeedCharts,
+    visible: true,
+  },
+  {
     card: OVERVIEW_CARD.ConnectionHistory,
     visible: true,
   },
