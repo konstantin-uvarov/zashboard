@@ -42,9 +42,11 @@ import * as echarts from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { debounce } from 'lodash'
 import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 echarts.use([LineChart, GridComponent, LegendComponent, TooltipComponent, CanvasRenderer])
 
+const { t } = useI18n()
 const chartEl = ref<HTMLElement | null>(null)
 const colorRef = ref<HTMLElement | null>(null)
 const isPaused = ref(false)
@@ -63,6 +65,9 @@ const updateFontFamily = () => {
   if (!colorRef.value) return
   fontFamily = getComputedStyle(colorRef.value).fontFamily
 }
+
+const escapeHtml = (s: string) =>
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 
 const bytesFormatter = (value: number) =>
   prettyBytesHelper(value, { maximumFractionDigits: 1, binary: false })
@@ -118,7 +123,7 @@ const buildOptions = () => {
             return (
               `<div style="display:flex;align-items:center;gap:4px;padding:1px 0">` +
               `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${p.color}"></span>` +
-              `${p.seriesName}: ${bytesFormatter(bytes)}` +
+              `${escapeHtml(p.seriesName)}: ${bytesFormatter(bytes)}` +
               `</div>`
             )
           })
@@ -126,7 +131,7 @@ const buildOptions = () => {
         const totalRow =
           params.length > 1
             ? `<div style="padding:2px 0;margin-top:2px;border-top:1px solid ${colorSet.baseContent10}">` +
-              `Total: ${bytesFormatter(total)}` +
+              `${escapeHtml(t('total'))}: ${bytesFormatter(total)}` +
               `</div>`
             : ''
         return rows + totalRow
@@ -187,7 +192,18 @@ const buildOptions = () => {
   }
 }
 
-const applyOptions = () => myChart?.setOption(buildOptions(), /* notMerge */ true)
+const applyOptions = () => {
+  const opts = buildOptions()
+  // Preserve user's legend toggle state across notMerge rebuilds
+  const currentOpts = myChart?.getOption() as
+    | { legend?: { selected?: Record<string, boolean> }[] }
+    | undefined
+  const selected = currentOpts?.legend?.[0]?.selected
+  if (selected && opts.legend) {
+    ;(opts.legend as Record<string, unknown>).selected = selected
+  }
+  myChart?.setOption(opts, /* notMerge */ true)
+}
 
 let myChart: echarts.ECharts | null = null
 
