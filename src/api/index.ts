@@ -410,7 +410,9 @@ export const fetchIsUIUpdateAvailable = async () => {
     zashboardVersion.value,
   )
 
-  return Boolean(tag_name && tag_name !== `v${zashboardVersion.value}`)
+  // Strip fork suffix (e.g. "-sb2") so "3.6.0-sb2" compares correctly against upstream "v3.6.0"
+  const upstreamVersion = zashboardVersion.value.replace(/-sb\d+$/, '')
+  return Boolean(tag_name && tag_name !== `v${upstreamVersion}`)
 }
 
 const check = async (url: string, versionNumber: string) => {
