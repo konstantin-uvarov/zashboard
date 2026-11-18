@@ -70,6 +70,10 @@ pnpm type-check # TypeScript check
 pnpm build      # production build → dist/
 ```
 
+## UI design review
+
+For UI design work (critique, audit, polish, redesign), invoke the `impeccable` skill (`/impeccable audit|critique|polish`). It is vendored from upstream Impeccable, with an edit hook in `.claude/settings.json`; update it per `~/.agents/docs/third-party-skills.md`, never by hand. The fork-only files it adds (`.agents/`, `.claude/`, `.prettierignore`, the `.gitignore` and ESLint ignore lines) don't exist upstream, so keep them when syncing.
+
 ## Creating a release
 
 1. **Bump version** in `package.json` — format is `{upstream-version}-{label}{n}`, e.g. `3.5.1-sb2`

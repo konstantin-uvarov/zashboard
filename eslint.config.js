@@ -1,6 +1,6 @@
-import pluginVue from 'eslint-plugin-vue'
-import vueTsEslintConfig from '@vue/eslint-config-typescript'
 import skipFormatting from '@vue/eslint-config-prettier/skip-formatting'
+import vueTsEslintConfig from '@vue/eslint-config-typescript'
+import pluginVue from 'eslint-plugin-vue'
 
 export default [
   {
@@ -10,7 +10,14 @@ export default [
 
   {
     name: 'app/files-to-ignore',
-    ignores: ['**/dist/**', '**/dist-ssr/**', '**/coverage/**'],
+    // .agents/skills/impeccable: vendored third-party skill, never edited here
+    ignores: [
+      '**/dist/**',
+      '**/dist-ssr/**',
+      '**/coverage/**',
+      '.agents/skills/impeccable/**',
+      '.claude/skills/impeccable/**',
+    ],
   },
 
   ...pluginVue.configs['flat/essential'],
@@ -21,11 +28,11 @@ export default [
       'vue/max-attributes-per-line': [
         'error',
         {
-          'singleline': 1,
-          'multiline': 1
-        }
-      ]
-    }
+          singleline: 1,
+          multiline: 1,
+        },
+      ],
+    },
   }),
   skipFormatting,
 ]
